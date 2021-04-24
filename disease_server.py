@@ -9,107 +9,52 @@ import matplotlib.pyplot as plt
 
 
 def agent_portrayal(agent):
-    portrayal = {"Shape": "circle",
-                 "Color": "red",
-                 "Filled": "true",
-                 "Layer": 0,
-                 "r": 0.7}
-
-    if agent.infected == False:
-        if agent.immunized == False:
-            portrayal["Color"] = "yellow"
-            portrayal["Layer"] = 1
-            portrayal["r"] = 0.5
-        else:
-            portrayal["Color"] = "green"
-            portrayal["Layer"] = 2
-            portrayal["r"] = 0.2
+    portrayal = {"Filled": "true", "Layer": 0}
+    if (isinstance(agent, Spot_Agent)):
+        portrayal["Shape"] = "circle"
+        portrayal["Color"] = "grey"
+        portrayal["r"] = 0.8
+    elif (isinstance(agent, Person_Agent)):
+        portrayal["Shape"] = "circle"
+        portrayal["Color"] = "red"
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+        portrayal["text"] = "A" + str(agent.unique_id)
+        portrayal["text_color"] = "black"
+    elif (isinstance(agent, Product_Agent)):
+        portrayal["Shape"] = "circle"
+        portrayal["Filled"] = False
+        portrayal["text"] = str(agent.num_waiting_products)
+        portrayal["text_color"] = "black"
     return portrayal
 
 
 grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
-total_infected_graph = ChartModule(
-    [{"Label": "Total_Infected", "Color": "Red"},
-     {"Label": "Total_Immunized", "Color": "Green"}],
-    data_collector_name='dataCollector'
-)
+# total_infected_graph = ChartModule(
+#     [{"Label": "Total_Infected", "Color": "Red"},
+#      {"Label": "Total_Immunized", "Color": "Green"}],
+#     data_collector_name='dataCollector'
+# )
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
-    20,
-    2,
-    100,
-    1
-)
-
-initial_infection_slider = UserSettableParameter(
-    "slider",
-    "Prop of Initial Infection",
-    0.4,
-    0.01,
+    3,
     1,
-    0.01
-)
-
-transmissibility_slider = UserSettableParameter(
-    "slider",
-    "Prop of Transmissibility",
-    0.3,
-    0.01,
-    1,
-    0.01
-)
-
-level_of_movement_slider = UserSettableParameter(
-    "slider",
-    "Prop of Movement",
-    0.5,
-    0.01,
-    1,
-    0.01
-)
-
-mean_length_of_disease_slider = UserSettableParameter(
-    "slider",
-    "Mean Length of Disease (Days)",
-    14,
-    1,
-    100,
-    1
-)
-
-immunization_prob_slider = UserSettableParameter(
-    "slider",
-    "Immunization Probability",
-    0.5,
-    0.01,
-    1,
-    0.01
-)
-
-mean_length_of_immunization_slider = UserSettableParameter(
-    "slider",
-    "Mean Length of Immunization (Days)",
-    20,
-    1,
-    100,
+    6,
     1
 )
 
 server = ModularServer(
     Disease_Model,
-    [grid, total_infected_graph],
+    # [grid, total_infected_graph],
+    [grid],
     "Disease Spread Model",
     {
-        "N": number_of_agents_slider,
+        "num_person_agent": number_of_agents_slider,
         "width": 10,
         "height": 10,
-        "initial_infection": initial_infection_slider,
-        "transmissibility": transmissibility_slider,
-        "level_of_movement": level_of_movement_slider,
-        "mean_length_of_disease": mean_length_of_disease_slider,
-        "immunization_prob": immunization_prob_slider,
-        "mean_length_of_immunization": mean_length_of_immunization_slider
+        "num_product": 1,
+        "each_step_duration": 2
     }
 )
 
