@@ -19,7 +19,7 @@ def agent_portrayal(agent):
         portrayal["Color"] = "red"
         portrayal["Layer"] = 1
         portrayal["r"] = 0.5
-        portrayal["text"] = "A" + str(agent.unique_id)
+        portrayal["text"] = str(agent.unique_id)
         portrayal["text_color"] = "black"
     elif (isinstance(agent, Product_Agent)):
         portrayal["Shape"] = "circle"

@@ -18,7 +18,6 @@ class Disease_Model(Model):
         self.num_product = num_product
         self.each_step_duration = each_step_duration
         self.num_finished_product = 0
-
         self.grid = MultiGrid(width, height, False)
 
         self.schedule = RandomActivation(self)
@@ -43,7 +42,7 @@ class Disease_Model(Model):
             default_coordinates, self.num_person_agent)
         for i in range(self.num_person_agent):
             new_agent = Person_Agent(
-                i,
+                "A"+str(i),
                 self,
                 self.each_step_duration)
             self.grid.place_agent(new_agent, random_coordinates[i])
@@ -55,9 +54,15 @@ class Disease_Model(Model):
         #     agent_reporters={}
         # )
 
+    def update_num_finished_product(self):
+        self.num_finished_product += 1
+        if (self.check_if_running() == False):
+            self.running = False
+
+    def check_if_running(self):
+        return self.num_finished_product < self.num_product
+
     def step(self):
-        if (self.num_finished_product == self.num_product):
-            return
         self.schedule.step()
         # self.dataCollector.collect(self)
 
