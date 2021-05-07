@@ -24,7 +24,7 @@ def agent_portrayal(agent):
     elif (isinstance(agent, Product_Agent)):
         portrayal["Shape"] = "circle"
         portrayal["Filled"] = False
-        portrayal["text"] = str(agent.num_waiting_products)
+        portrayal["text"] = str(agent.num_waiting_products) + '/' + str(agent.num_max_waiting_products)
         portrayal["text_color"] = "black"
     return portrayal
 
@@ -44,17 +44,65 @@ number_of_agents_slider = UserSettableParameter(
     1
 )
 
+num_max_waiting_products_slider = UserSettableParameter(
+    "slider",
+    "Max number of waiting products on station",
+    2,
+    1,
+    5,
+    1
+)
+
+number_of_products_A_slider = UserSettableParameter(
+    "slider",
+    "Number of Product A",
+    3,
+    0,
+    20,
+    1
+)
+
+num_step_to_finish_product_A_slider = UserSettableParameter(
+    "slider",
+    "Number of step to finish product A",
+    2,
+    1,
+    5,
+    1
+)
+
+number_of_products_B_slider = UserSettableParameter(
+    "slider",
+    "Number of Product B",
+    3,
+    0,
+    20,
+    1
+)
+
+num_step_to_finish_product_B_slider = UserSettableParameter(
+    "slider",
+    "Number of step to finish product B",
+    2,
+    1,
+    5,
+    1
+)
+
 server = ModularServer(
     Disease_Model,
     # [grid, total_infected_graph],
     [grid],
     "Disease Spread Model",
     {
-        "num_person_agent": number_of_agents_slider,
         "width": 10,
         "height": 10,
-        "num_product": 1,
-        "each_step_duration": 2
+        "num_person_agent": number_of_agents_slider,
+        "num_product_A": number_of_products_A_slider,
+        "each_step_duration_A": num_step_to_finish_product_A_slider,
+        "num_product_B": number_of_products_B_slider,
+        "each_step_duration_B": num_step_to_finish_product_B_slider,
+        "num_max_waiting_products": num_max_waiting_products_slider
     }
 )
 

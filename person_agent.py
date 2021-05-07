@@ -1,5 +1,4 @@
 from mesa import Agent
-import random
 from utilities import *
 
 
@@ -8,21 +7,27 @@ class Person_Agent(Agent):
         super().__init__(unique_id, model)
         self.current_doing_duration = None
         self.each_step_duration = each_step_duration
-        self.dest_pos = self.pos
+        self.old_pos = self.pos
 
     def step(self):
+        current_processing_product_step = self.model.get_current_processing_product_step()
+        if (current_processing_product_step != self.each_step_duration):
+            self.current_doing_duration = None
+            self.each_step_duration = current_processing_product_step
+
         if (self.is_manufacturing() == True):
             return
+
         if (self.model.check_if_running() == False):
             return
 
-        self.dest_pos = self.pos
+        self.old_pos = self.pos
         if (self.find_backward() == False):
             self.find_forward()
 
     def is_moving(self):
         current_pos = tuple(self.pos)
-        if (self.dest_pos == None or (current_pos[0] == self.dest_pos[0] and current_pos[1] == self.dest_pos[1])):
+        if (self.old_pos == None or (current_pos[0] == self.old_pos[0] and current_pos[1] == self.old_pos[1])):
             return False
         return True
 
@@ -102,7 +107,7 @@ class Person_Agent(Agent):
         if (nextPosition[0] == destX and nextPosition[1] == destY and startDoing == True):
             self.current_doing_duration = 0
 
-        self.dest_pos = destination
+        # self.dest_pos = destination
         return nextPosition
 
     def find_backward(self):
