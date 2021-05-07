@@ -3,27 +3,36 @@ from utilities import *
 
 
 class Person_Agent(Agent):
-    def __init__(self, unique_id, model, each_step_duration):
+    def __init__(self, unique_id, model, current_product, each_step_duration):
         super().__init__(unique_id, model)
-        self.current_doing_duration = None
+        self.current_product = current_product
         self.each_step_duration = each_step_duration
+        self.current_doing_duration = None
         self.old_pos = self.pos
+        self.delay_moving = False
 
     def step(self):
-        current_processing_product_step = self.model.get_current_processing_product_step()
-        if (current_processing_product_step != self.each_step_duration):
-            self.current_doing_duration = None
-            self.each_step_duration = current_processing_product_step
-
         if (self.is_manufacturing() == True):
+            self.check_if_change_product()
             return
+        self.check_if_change_product()
 
         if (self.model.check_if_running() == False):
+            return
+        if (self.delay_moving):
+            self.delay_moving = False
             return
 
         self.old_pos = self.pos
         if (self.find_backward() == False):
             self.find_forward()
+
+    def check_if_change_product(self):
+        current_product = self.model.get_current_processing_product()
+        if (current_product != self.current_product):
+            self.reset_work()
+            self.each_step_duration = self.model.get_current_processing_product_step()
+            self.current_product = current_product
 
     def is_moving(self):
         current_pos = tuple(self.pos)
@@ -31,23 +40,35 @@ class Person_Agent(Agent):
             return False
         return True
 
+    def start_work(self):
+        self.current_doing_duration = 0
+
+    def reset_work(self):
+        self.current_doing_duration = None
+
+    def progress_work(self):
+        self.current_doing_duration += 1
+
     def is_manufacturing(self):
         if (self.current_doing_duration is None):
             if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
-                self.current_doing_duration = 0
+                self.start_work()
                 return True
             return False
 
-        if (self.current_doing_duration >= self.each_step_duration):
-            self.update_product_agent_waiting_products()
-            if (self.check_if_anything_new_to_do() == True):
-                self.current_doing_duration = 0
-                return True
-            self.current_doing_duration = None
+        if (self.check_if_done_work(True) == True):
             return False
         else:
-            self.current_doing_duration += 1
+            self.progress_work()
             return True
+
+    def check_if_done_work(self, delay_moving):
+        if (self.current_doing_duration >= self.each_step_duration - 1):
+            self.update_product_agent_waiting_products()
+            self.reset_work()
+            self.delay_moving = delay_moving
+            return True
+        return False
 
     def update_product_agent_waiting_products(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
@@ -55,12 +76,13 @@ class Person_Agent(Agent):
             product_agent = self.model.grid.get_cell_list_contents(
                 [product_pos])[0]
 
-            product_agent.num_waiting_products -= 1
+            product_agent.update_waiting_product(self.current_product, False)
             next_product_pos = convert_spot_pos_to_next_product_pos(self.pos)
             if (next_product_pos is not None):
                 next_product_agent = self.model.grid.get_cell_list_contents(
                     [next_product_pos])[0]
-                next_product_agent.num_waiting_products += 1
+                next_product_agent.update_waiting_product(
+                    self.current_product, True)
 
             # last_position
             else:
@@ -71,7 +93,8 @@ class Person_Agent(Agent):
             next_product_pos = convert_spot_pos_to_next_product_pos(self.pos)
             next_product_agent = self.model.grid.get_cell_list_contents(
                 [next_product_pos])[0]
-            next_product_agent.num_waiting_products += 1
+            next_product_agent.update_waiting_product(
+                self.current_product, True)
 
     def check_if_anything_new_to_do(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
@@ -86,7 +109,7 @@ class Person_Agent(Agent):
         else:
             return False
 
-    def calculate_next_pos(self, destination, startDoing=True):
+    def calculate_next_pos(self, destination, start_doing=True):
         if (self.pos is None):
             return None
         currentX, currentY = tuple(self.pos)
@@ -104,10 +127,13 @@ class Person_Agent(Agent):
             elif (currentY > destY):
                 nextPosition = (currentX, currentY-1)
 
-        if (nextPosition[0] == destX and nextPosition[1] == destY and startDoing == True):
-            self.current_doing_duration = 0
+        if (nextPosition[0] == destX and nextPosition[1] == destY and start_doing == True):
+            self.start_work()
 
-        # self.dest_pos = destination
+        if (nextPosition[0] == currentX and nextPosition[1] == currentY and start_doing == True):
+            self.current_doing_duration = 1
+            self.check_if_done_work(False)
+
         return nextPosition
 
     def find_backward(self):
@@ -145,7 +171,7 @@ class Person_Agent(Agent):
         product_agent = self.model.grid.get_cell_list_contents(
             [product_pos])[0]
 
-        return product_agent.num_waiting_products > 0
+        return product_agent.check_if_any_waiting_product(self.current_product)
 
     def check_if_next_waiting_products_max(self, spot_pos):
         is_max_waiting_products_next_product_pos = False
@@ -153,7 +179,8 @@ class Person_Agent(Agent):
         if (next_product_pos is not None):
             next_product_agent = self.model.grid.get_cell_list_contents(
                 [next_product_pos])[0]
-            is_max_waiting_products_next_product_pos = next_product_agent.num_waiting_products >= next_product_agent.num_max_waiting_products
+            is_max_waiting_products_next_product_pos = next_product_agent.check_if_waiting_product_max(
+                self.current_product)
         return is_max_waiting_products_next_product_pos
 
     def check_if_any_person_agent_except_me(self, spot_pos):

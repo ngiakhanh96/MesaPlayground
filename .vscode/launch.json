@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "disease_server.py",
+            "program": "manufacture_server.py",
             "console": "integratedTerminal"
         }
     ]
