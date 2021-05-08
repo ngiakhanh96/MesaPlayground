@@ -10,15 +10,18 @@ class Person_Agent(Agent):
         self.current_doing_duration = None
         self.old_pos = self.pos
         self.delay_moving = False
+        self.is_update_product_agent_waiting_products = False
+
+    def advance(self):
+        if (self.is_update_product_agent_waiting_products == True):
+            self.update_product_agent_waiting_products()
+            self.is_update_product_agent_waiting_products = False
 
     def step(self):
-        if (self.is_manufacturing() == True):
-            self.check_if_change_product()
-            return
         self.check_if_change_product()
-
-        if (self.model.check_if_running() == False):
+        if (self.is_manufacturing() == True):
             return
+
         if (self.delay_moving):
             self.delay_moving = False
             return
@@ -40,8 +43,12 @@ class Person_Agent(Agent):
             return False
         return True
 
-    def start_work(self):
+    def prepare_work(self):
         self.current_doing_duration = 0
+
+    def start_work(self):
+        self.current_doing_duration = 1
+        self.check_if_done_work(False)
 
     def reset_work(self):
         self.current_doing_duration = None
@@ -64,7 +71,7 @@ class Person_Agent(Agent):
 
     def check_if_done_work(self, delay_moving):
         if (self.current_doing_duration >= self.each_step_duration - 1):
-            self.update_product_agent_waiting_products()
+            self.is_update_product_agent_waiting_products = True
             self.reset_work()
             self.delay_moving = delay_moving
             return True
@@ -128,11 +135,10 @@ class Person_Agent(Agent):
                 nextPosition = (currentX, currentY-1)
 
         if (nextPosition[0] == destX and nextPosition[1] == destY and start_doing == True):
-            self.start_work()
+            self.prepare_work()
 
         if (nextPosition[0] == currentX and nextPosition[1] == currentY and start_doing == True):
-            self.current_doing_duration = 1
-            self.check_if_done_work(False)
+            self.start_work()
 
         return nextPosition
 

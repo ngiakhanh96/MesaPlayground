@@ -1,5 +1,5 @@
 from mesa import Agent, Model
-from mesa.time import RandomActivation
+from mesa.time import SimultaneousActivation
 from mesa.space import MultiGrid
 from mesa.datacollection import DataCollector
 from person_agent import *
@@ -42,7 +42,7 @@ class Manufacture_Model(Model):
 
         self.grid = MultiGrid(width, height, False)
 
-        self.schedule = RandomActivation(self)
+        self.schedule = SimultaneousActivation(self)
 
         self.current_unprocessed_product_arr = []
         for i in range(self.product_dict["A"]["num_product"]):
