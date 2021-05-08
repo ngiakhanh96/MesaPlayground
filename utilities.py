@@ -1,3 +1,24 @@
+def is_equal_pos(pos1, pos2):
+    if (pos1 is None and pos2 is None):
+        return True
+    if (pos1 is None or pos2 is None):
+        return False
+    if (pos1[0] == pos2[0] and pos1[1] == pos2[1]):
+        return True
+    return False
+
+
+def get_spot_pos_list():
+    return list(
+        map(
+            convert_string_to_tuple_pos,
+            get_spot_pos_dict().values()))
+
+
+def convert_string_to_tuple_pos(spot_pos_str):
+    return tuple(
+        map(lambda x: int(x), spot_pos_str.split(",")))
+
 
 def get_spot_pos_dict():
     return {"0": "3,1", "1": "3,3", "2": "3,5",
@@ -32,6 +53,4 @@ def convert_spot_pos_to_next_product_pos(position):
 
 def get_spot_pos_from_dict(key):
     spot_pos_str = get_spot_pos_dict()[key]
-    spot_pos = tuple(
-        map(lambda x: int(x), spot_pos_str.split(",")))
-    return spot_pos
+    return convert_string_to_tuple_pos(spot_pos_str)

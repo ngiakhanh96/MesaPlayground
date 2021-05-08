@@ -11,6 +11,8 @@ class Person_Agent(Agent):
         self.old_pos = self.pos
         self.delay_moving = False
         self.is_update_product_agent_waiting_products = False
+        self.moving_step_count = 0
+        self.working_step_count = 0
 
     def advance(self):
         if (self.is_update_product_agent_waiting_products == True):
@@ -39,38 +41,38 @@ class Person_Agent(Agent):
 
     def is_moving(self):
         current_pos = tuple(self.pos)
-        if (self.old_pos == None or (current_pos[0] == self.old_pos[0] and current_pos[1] == self.old_pos[1])):
+        if (self.old_pos == None or is_equal_pos(current_pos, self.old_pos)):
             return False
         return True
 
     def prepare_work(self):
         self.current_doing_duration = 0
 
-    def start_work(self):
-        self.current_doing_duration = 1
-        self.check_if_done_work(False)
+    def start_work(self, delay_moving):
+        self.prepare_work()
+        self.progress_work(delay_moving)
 
     def reset_work(self):
         self.current_doing_duration = None
 
-    def progress_work(self):
+    def progress_work(self, delay_moving):
         self.current_doing_duration += 1
+        self.working_step_count += 1
+        return self.check_if_done_work(delay_moving)
 
     def is_manufacturing(self):
         if (self.current_doing_duration is None):
             if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
-                self.start_work()
+                self.start_work(False)
                 return True
             return False
 
-        if (self.check_if_done_work(True) == True):
+        if (self.progress_work(True) == True):
             return False
-        else:
-            self.progress_work()
-            return True
+        return True
 
     def check_if_done_work(self, delay_moving):
-        if (self.current_doing_duration >= self.each_step_duration - 1):
+        if (self.current_doing_duration >= self.each_step_duration):
             self.is_update_product_agent_waiting_products = True
             self.reset_work()
             self.delay_moving = delay_moving
@@ -134,16 +136,15 @@ class Person_Agent(Agent):
             elif (currentY > destY):
                 nextPosition = (currentX, currentY-1)
 
-        if (nextPosition[0] == destX and nextPosition[1] == destY and start_doing == True):
+        if (is_equal_pos(nextPosition, destination) and start_doing == True):
             self.prepare_work()
 
-        if (nextPosition[0] == currentX and nextPosition[1] == currentY and start_doing == True):
-            self.start_work()
+        if (is_equal_pos(nextPosition, self.pos) and start_doing == True):
+            self.start_work(False)
 
         return nextPosition
 
     def find_backward(self):
-        # pass
         isSucceeded = False
         for i in reversed(range(6)):
             spot_pos = get_spot_pos_from_dict(str(i))
@@ -157,8 +158,7 @@ class Person_Agent(Agent):
                 is_next_waiting_products_max = self.check_if_next_waiting_products_max(
                     spot_pos)
                 if (is_there_any_person_agent == False and is_there_any_product == True and is_next_waiting_products_max == False):
-                    next_pos = self.calculate_next_pos(spot_pos)
-                    self.model.grid.move_agent(self, next_pos)
+                    self.move_agent(spot_pos, True)
                     isSucceeded = True
                     return isSucceeded
 
@@ -167,8 +167,7 @@ class Person_Agent(Agent):
                 is_next_waiting_products_max = self.check_if_next_waiting_products_max(
                     spot_pos)
                 if (is_there_any_person_agent == False and is_next_waiting_products_max == False):
-                    next_pos = self.calculate_next_pos(spot_pos)
-                    self.model.grid.move_agent(self, next_pos)
+                    self.move_agent(spot_pos, True)
                     isSucceeded = True
                     return isSucceeded
         return isSucceeded
@@ -204,6 +203,11 @@ class Person_Agent(Agent):
             if (is_there_any_person_agent == True):
                 last_available_person_agent = is_there_any_person_agent
             elif (last_available_person_agent == True):
-                next_pos = self.calculate_next_pos(spot_pos, False)
-                self.model.grid.move_agent(self, next_pos)
+                self.move_agent(spot_pos, False)
                 return
+
+    def move_agent(self, destination_spot, start_doing):
+        next_pos = self.calculate_next_pos(destination_spot, start_doing)
+        if (is_equal_pos(self.pos, next_pos) == False):
+            self.moving_step_count += 1
+        self.model.grid.move_agent(self, next_pos)

@@ -2,7 +2,7 @@ from manufacture_model import *
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.UserParam import UserSettableParameter
-from mesa.visualization.modules import ChartModule
+from mesa.visualization.modules import BarChartModule
 from mesa.batchrunner import BatchRunner
 from numpy import arange
 import matplotlib.pyplot as plt
@@ -30,11 +30,18 @@ def agent_portrayal(agent):
 
 
 grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
-# total_infected_graph = ChartModule(
-#     [{"Label": "Total_Infected", "Color": "Red"},
-#      {"Label": "Total_Immunized", "Color": "Green"}],
-#     data_collector_name='dataCollector'
-# )
+total_moving_step_graph = BarChartModule(
+    [{"Label": "Total_Moving_Step", "Color": "Red"}],
+    scope="agent",
+    data_collector_name='data_collector'
+)
+
+total_working_step_graph = BarChartModule(
+    [{"Label": "Total_Working_Step", "Color": "Red"}],
+    scope="agent",
+    data_collector_name='data_collector'
+)
+
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
@@ -91,8 +98,7 @@ num_step_to_finish_product_B_slider = UserSettableParameter(
 
 server = ModularServer(
     Manufacture_Model,
-    # [grid, total_infected_graph],
-    [grid],
+    [grid, total_moving_step_graph, total_working_step_graph],
     "Manufacture Model",
     {
         "width": 10,
