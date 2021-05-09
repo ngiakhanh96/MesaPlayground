@@ -1,5 +1,4 @@
 from mesa import Agent
-import random
 
 
 class Product_Agent(Agent):

@@ -26,6 +26,23 @@ def agent_portrayal(agent):
         portrayal["Filled"] = False
         portrayal["text"] = f"A: {agent.num_waiting_product_dict['A']}/{agent.num_max_waiting_products}, B: {agent.num_waiting_product_dict['B']}/{agent.num_max_waiting_products}"
         portrayal["text_color"] = "black"
+    elif (isinstance(agent, Kanban_Agent)):
+        portrayal["Shape"] = "circle"
+        portrayal["Filled"] = False
+        portrayal["text"] = f"{agent.num_available_kanban}/{agent.max_kanban}"
+        portrayal["text_color"] = "black"
+    elif (isinstance(agent, Agv_Station_Agent)):
+        portrayal["Shape"] = "rect"
+        portrayal["Color"] = "green"
+        portrayal["w"] = 1
+        portrayal["h"] = 1
+    elif (isinstance(agent, Agv_Agent)):
+        portrayal["Shape"] = "circle"
+        portrayal["Color"] = "blue"
+        portrayal["Layer"] = 1
+        portrayal["r"] = 0.5
+        portrayal["text"] = str(agent.unique_id)
+        portrayal["text_color"] = "black"
     return portrayal
 
 
@@ -96,9 +113,28 @@ num_step_to_finish_product_B_slider = UserSettableParameter(
     1
 )
 
+num_agv_slider = UserSettableParameter(
+    "slider",
+    "Number of AGV",
+    2,
+    1,
+    2,
+    1
+)
+
+num_min_kanban_to_refill_slider = UserSettableParameter(
+    "slider",
+    "Minimum of kanban to refill",
+    1,
+    0,
+    2,
+    1
+)
+
 server = ModularServer(
     Manufacture_Model,
     [grid, total_moving_step_graph, total_working_step_graph],
+    # [grid],
     "Manufacture Model",
     {
         "width": 10,
@@ -108,7 +144,9 @@ server = ModularServer(
         "each_step_duration_A": num_step_to_finish_product_A_slider,
         "num_product_B": number_of_products_B_slider,
         "each_step_duration_B": num_step_to_finish_product_B_slider,
-        "num_max_waiting_products": num_max_waiting_products_slider
+        "num_max_waiting_products": num_max_waiting_products_slider,
+        "num_agv": num_agv_slider,
+        "num_min_kanban_to_refill": num_min_kanban_to_refill_slider
     }
 )
 
