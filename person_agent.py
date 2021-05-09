@@ -9,7 +9,6 @@ class Person_Agent(Agent):
         self.each_step_duration = each_step_duration
         self.current_doing_duration = None
         self.old_pos = self.pos
-        self.delay_moving = False
         self.is_update_product_agent_waiting_products = False
         self.moving_step_count = 0
         self.working_step_count = 0
@@ -22,10 +21,6 @@ class Person_Agent(Agent):
     def step(self):
         self.check_if_change_product()
         if (self.is_manufacturing() == True):
-            return
-
-        if (self.delay_moving):
-            self.delay_moving = False
             return
 
         self.old_pos = self.pos
@@ -48,36 +43,35 @@ class Person_Agent(Agent):
     def prepare_work(self):
         self.current_doing_duration = 0
 
-    def start_work(self, delay_moving):
+    def start_work(self):
         self.prepare_work()
-        self.progress_work(delay_moving)
+        return self.progress_work()
 
     def reset_work(self):
         self.current_doing_duration = None
 
-    def progress_work(self, delay_moving):
+    def progress_work(self):
         self.current_doing_duration += 1
         self.working_step_count += 1
-        return self.check_if_done_work(delay_moving)
+        return self.check_if_done_work()
 
-    def is_manufacturing(self):
-        if (self.current_doing_duration is None):
-            if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
-                self.start_work(False)
-                return True
-            return False
-
-        if (self.progress_work(True) == True):
-            return False
-        return True
-
-    def check_if_done_work(self, delay_moving):
+    def check_if_done_work(self):
         if (self.current_doing_duration >= self.each_step_duration):
             self.is_update_product_agent_waiting_products = True
             self.reset_work()
-            self.delay_moving = delay_moving
             return True
         return False
+
+    def is_manufacturing(self):
+        if (self.current_doing_duration is None):
+            # If had just done or waiting
+            if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
+                self.start_work()
+                return True
+            return False
+
+        self.progress_work()
+        return True
 
     def update_product_agent_waiting_products(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
@@ -140,7 +134,7 @@ class Person_Agent(Agent):
             self.prepare_work()
 
         if (is_equal_pos(nextPosition, self.pos) and start_doing == True):
-            self.start_work(False)
+            self.start_work()
 
         return nextPosition
 
