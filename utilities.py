@@ -9,7 +9,7 @@ def get_product_pos_dict():
 
 
 def get_kanban_pos_dict():
-    return get_left_kanban_pos_dict().update(get_right_kanban_pos_dict())
+    return {**get_left_kanban_pos_dict(), **get_right_kanban_pos_dict()}
 
 
 def get_left_kanban_pos_dict():
