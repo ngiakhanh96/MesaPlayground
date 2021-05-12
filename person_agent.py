@@ -51,6 +51,12 @@ class Person_Agent(Agent):
         self.current_doing_duration = None
 
     def progress_work(self):
+        kanban_pos = convert_spot_pos_to_kanban_pos(self.pos)
+        kanban_agent = self.model.grid.get_cell_list_contents(
+            [kanban_pos])[0]
+        if (kanban_agent.is_any_available_kanban() == False):
+            return
+        kanban_agent.consume()
         self.current_doing_duration += 1
         self.working_step_count += 1
         return self.check_if_done_work()

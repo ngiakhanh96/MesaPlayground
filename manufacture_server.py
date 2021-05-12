@@ -38,11 +38,14 @@ def agent_portrayal(agent):
         portrayal["h"] = 1
     elif (isinstance(agent, Agv_Agent)):
         portrayal["Shape"] = "circle"
-        portrayal["Color"] = "blue"
         portrayal["Layer"] = 1
         portrayal["r"] = 0.5
         portrayal["text"] = str(agent.unique_id)
         portrayal["text_color"] = "black"
+        if (agent.status != Status.Comeback and agent.status != Status.Loading):
+            portrayal["Color"] = "red"
+        else:
+            portrayal["Color"] = "yellow"
     return portrayal
 
 

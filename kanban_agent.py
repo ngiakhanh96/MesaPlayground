@@ -8,15 +8,25 @@ class Kanban_Agent(Agent):
         self.coordinate = coordinate
         self.num_available_kanban = num_available_kanban
         self.max_kanban = max_kanban
+        self.is_update_consume = False
+        self.is_update_refill = False
+
+    def advance(self):
+        if (self.is_update_consume == True):
+            self.num_available_kanban -= 1
+            self.is_update_consume = False
+        if (self.is_update_refill == True):
+            self.num_available_kanban += 1
+            self.is_update_refill = False
 
     def step(self):
         return
 
-    def consume_kanban(self):
-        self.num_available_kanban -= 1
+    def consume(self):
+        self.is_update_consume = True
 
-    def refill_kanban(self):
-        self.num_available_kanban += 1
+    def refill(self):
+        self.is_update_refill = True
 
     def is_any_available_kanban(self):
         return self.num_available_kanban > 0

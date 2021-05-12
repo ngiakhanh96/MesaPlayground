@@ -155,7 +155,12 @@ class Manufacture_Model(Model):
     def step(self):
         self.schedule.step()
         self.orchestrate_agv()
+        self.update_kanban()
         self.data_collector.collect(self)
+
+    def update_kanban(self):
+        for kanban_agent in self.kanban_agent_dict.values():
+            kanban_agent.advance()
 
     def step_agvs(self):
         self.step_agv("0")
@@ -175,9 +180,10 @@ class Manufacture_Model(Model):
                 lambda kanban_key: self.kanban_agent_dict[
                     kanban_key].num_available_kanban <= self.num_min_kanban_to_refill,
                 kanban_key_list))
+            need_to_refill_kanban_key_list.sort(key=lambda kanban_key: self.kanban_agent_dict[
+                kanban_key].num_available_kanban)
             if (len(need_to_refill_kanban_key_list) > 0):
-                chosen_kanban_key = random.choice(
-                    need_to_refill_kanban_key_list)
+                chosen_kanban_key = need_to_refill_kanban_key_list[0]
                 chosen_kanban_pos = self.kanban_agent_dict[chosen_kanban_key].coordinate
                 agv_agent.refill_kanban(chosen_kanban_pos)
             else:
@@ -185,18 +191,19 @@ class Manufacture_Model(Model):
         return is_working_agv
 
     def advance_agvs(self):
-        for agv_agent in list(self.agv_agent_dict.values):
+        for agv_agent in list(self.agv_agent_dict.values()):
             agv_agent.advance()
 
     def orchestrate_agv(self):
         if (self.num_agv > 1):
             self.step_agvs()
-            self.advance_agvs()
 
         else:
-            side_list = ["0", "1"]
-            random.shuffle(side_list)
             agv_agent_list = list(self.agv_agent_dict.values())
             if (agv_agent_list[0].fulfill_duty() == False and agv_agent_list[1].fulfill_duty() == False):
+                side_list = ["0", "1"]
+                random.shuffle(side_list)
                 if (self.step_agv(side_list[0]) == False):
                     self.step_agv(side_list[1])
+
+        self.advance_agvs()

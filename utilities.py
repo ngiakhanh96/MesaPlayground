@@ -24,10 +24,28 @@ def get_agv_station_pos_dict():
     return {"0": (4, 7), "1": (5, 7)}
 
 
+def convert_kanban_pos_to_filling_pos(kanban_pos, left_or_right):
+    kanban_posX, kanban_posY = kanban_pos
+    if (left_or_right == "0"):
+        kanban_posX -= 1
+    else:
+        kanban_posX += 1
+    return (kanban_posX, kanban_posY)
+
+
+def convert_spot_pos_to_kanban_pos(spot_pos):
+    spot_posX, spot_posY = spot_pos
+    if (spot_posX == 3):
+        spot_posX -= 1
+    else:
+        spot_posX += 1
+    return (spot_posX, spot_posY)
+
+
 def convert_spot_pos_to_product_pos(position):
     x, y = position
     if (x == 6):
-        return (x, y+1)
+        return (x, y + 1)
     if (x == 3 and y != 1):
         return (x, y - 1)
     return None
