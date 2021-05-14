@@ -126,15 +126,23 @@ class Person_Agent(Agent):
 
         nextPosition = (currentX, currentY)
 
-        if (currentX < destX):
-            nextPosition = (currentX+1, currentY)
-        elif (currentX > destX):
-            nextPosition = (currentX-1, currentY)
+        is_in_spot_pos = True in (is_equal_pos(self.pos, spot_pos)
+                                  for spot_pos in get_spot_pos_list())
+        if (is_in_spot_pos == True and is_equal_pos(self.pos, destination) == False):
+            if (currentX == 3):
+                nextPosition = (currentX+1, currentY)
+            else:
+                nextPosition = (currentX-1, currentY)
         else:
             if (currentY < destY):
                 nextPosition = (currentX, currentY+1)
             elif (currentY > destY):
                 nextPosition = (currentX, currentY-1)
+            else:
+                if (currentX < destX):
+                    nextPosition = (currentX+1, currentY)
+                elif (currentX > destX):
+                    nextPosition = (currentX-1, currentY)
 
         if (is_equal_pos(nextPosition, destination) and start_doing == True):
             self.prepare_work()

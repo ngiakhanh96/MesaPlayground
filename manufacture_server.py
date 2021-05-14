@@ -43,7 +43,7 @@ def agent_portrayal(agent):
         portrayal["text"] = str(agent.unique_id)
         portrayal["text_color"] = "black"
         if (agent.status != Status.Comeback and agent.status != Status.Loading):
-            portrayal["Color"] = "red"
+            portrayal["Color"] = "blue"
         else:
             portrayal["Color"] = "yellow"
     return portrayal
