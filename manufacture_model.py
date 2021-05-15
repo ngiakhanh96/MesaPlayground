@@ -10,6 +10,7 @@ from agv_station_agent import *
 from agv_agent import *
 from utilities import *
 import random
+from random import randint
 
 """A model of manufacture."""
 
@@ -82,7 +83,7 @@ class Manufacture_Model(Model):
                 i,
                 self,
                 kanban_pos,
-                0,
+                randint(0, 3),
                 self.num_max_kanban
             )
             self.grid.place_agent(kanban_agent, kanban_agent.coordinate)
