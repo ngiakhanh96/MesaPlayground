@@ -3,7 +3,7 @@ from utilities import *
 
 
 class Person_Agent(Agent):
-    def __init__(self, unique_id, model, current_product, each_step_duration):
+    def __init__(self, unique_id, model, current_product, each_step_duration, movement_radius):
         super().__init__(unique_id, model)
         self.current_product = current_product
         self.each_step_duration = each_step_duration
@@ -12,6 +12,7 @@ class Person_Agent(Agent):
         self.is_update_product_agent_waiting_products = False
         self.moving_step_count = 0
         self.working_step_count = 0
+        self.movement_radius = movement_radius
 
     def advance(self):
         if (self.is_update_product_agent_waiting_products == True):
@@ -126,8 +127,7 @@ class Person_Agent(Agent):
 
         nextPosition = (currentX, currentY)
 
-        is_in_spot_pos = True in (is_equal_pos(self.pos, spot_pos)
-                                  for spot_pos in get_spot_pos_list())
+        is_in_spot_pos = self.is_in_spot_pos()
         if (is_in_spot_pos == True and is_equal_pos(self.pos, destination) == False):
             if (currentX == 3):
                 nextPosition = (currentX+1, currentY)
@@ -152,10 +152,30 @@ class Person_Agent(Agent):
 
         return nextPosition
 
+    def is_in_spot_pos(self):
+        return True in (is_equal_pos(self.pos, spot_pos)
+                        for spot_pos in get_spot_pos_list())
+
+    def is_spot_pos_in_vision(self, spot_pos):
+        distance = 0
+        is_in_spot_pos = self.is_in_spot_pos()
+        currentX, currentY = tuple(self.pos)
+        spot_posX, spot_posY = spot_pos
+        if (is_equal_pos(self.pos, spot_pos) == False and is_in_spot_pos == True and currentX == spot_posX):
+            distance += 2
+        distance += abs(currentX - spot_posX) + abs(currentY - spot_posY)
+        if (distance <= self.movement_radius):
+            return True
+        return False
+
     def find_backward(self):
         isSucceeded = False
-        for i in reversed(range(6)):
+        num_spot_pos = len(get_spot_pos_list())
+        for i in reversed(range(num_spot_pos)):
             spot_pos = get_spot_pos_from_dict(str(i))
+            if (self.is_spot_pos_in_vision(spot_pos) == False):
+                continue
+
             is_there_any_person_agent = self.check_if_any_person_agent_except_me(
                 spot_pos)
 
@@ -203,8 +223,11 @@ class Person_Agent(Agent):
 
     def find_forward(self):
         last_available_person_agent = False
-        for i in range(6):
+        num_spot_pos = len(get_spot_pos_list())
+        for i in range(num_spot_pos):
             spot_pos = get_spot_pos_from_dict(str(i))
+            if (self.is_spot_pos_in_vision(spot_pos) == False):
+                continue
             is_there_any_person_agent = self.check_if_any_person_agent_except_me(
                 spot_pos)
 

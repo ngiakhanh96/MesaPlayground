@@ -49,7 +49,7 @@ def agent_portrayal(agent):
     return portrayal
 
 
-grid = CanvasGrid(agent_portrayal, 10, 10, 500, 500)
+grid = CanvasGrid(agent_portrayal, 10, 10, 800, 800)
 total_moving_step_graph = BarChartModule(
     [{"Label": "Total_Moving_Step", "Color": "Red"}],
     scope="agent",
@@ -134,6 +134,12 @@ num_min_kanban_to_refill_slider = UserSettableParameter(
     1
 )
 
+agent_movement_radius_choice = UserSettableParameter(
+    'choice',
+    'Agent movement radius (squares)',
+    value=4,
+    choices=[4, 5, 7])
+
 server = ModularServer(
     Manufacture_Model,
     [grid, total_moving_step_graph, total_working_step_graph],
@@ -149,7 +155,8 @@ server = ModularServer(
         "each_step_duration_B": num_step_to_finish_product_B_slider,
         "num_max_waiting_products": num_max_waiting_products_slider,
         "num_agv": num_agv_slider,
-        "num_min_kanban_to_refill": num_min_kanban_to_refill_slider
+        "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,
+        "movement_radius": agent_movement_radius_choice
     }
 )
 

@@ -28,7 +28,8 @@ class Manufacture_Model(Model):
             each_step_duration_B,
             num_max_waiting_products,
             num_agv,
-            num_min_kanban_to_refill):
+            num_min_kanban_to_refill,
+            movement_radius):
         super().__init__()
 
         # setup product_dict
@@ -46,7 +47,6 @@ class Manufacture_Model(Model):
         # setup Grid and Schedule
         self.grid = MultiGrid(width, height, False)
         self.schedule = SimultaneousActivation(self)
-        # self.agv_schedule = RandomActivation(self)
 
         # setup product array
         self.current_unprocessed_product_arr = []
@@ -99,7 +99,8 @@ class Manufacture_Model(Model):
                 "A"+str(i),
                 self,
                 self.get_current_processing_product(),
-                self.get_current_processing_product_step())
+                self.get_current_processing_product_step(),
+                movement_radius)
             self.grid.place_agent(person_agent, random_coordinates[i])
             self.schedule.add(person_agent)
 
