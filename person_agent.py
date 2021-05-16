@@ -158,10 +158,9 @@ class Person_Agent(Agent):
 
     def is_spot_pos_in_vision(self, spot_pos):
         distance = 0
-        is_in_spot_pos = self.is_in_spot_pos()
         currentX, currentY = tuple(self.pos)
         spot_posX, spot_posY = spot_pos
-        if (is_equal_pos(self.pos, spot_pos) == False and is_in_spot_pos == True and currentX == spot_posX):
+        if (is_equal_pos(self.pos, spot_pos) == False and currentX == spot_posX):
             distance += 2
         distance += abs(currentX - spot_posX) + abs(currentY - spot_posY)
         if (distance <= self.movement_radius):

@@ -60,7 +60,8 @@ class Manufacture_Model(Model):
         self.num_max_waiting_products = num_max_waiting_products
         self.num_max_kanban = 3
         self.kanban_agent_dict = {}
-        for i in range(6):
+        num_spot_pos = len(get_spot_pos_list())
+        for i in range(num_spot_pos):
             spot_pos = get_spot_pos_from_dict(str(i))
             spot_agent = Spot_Agent(
                 i,
