@@ -13,9 +13,11 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, model, home_coordinate):
+    def __init__(self, unique_id, model, home_coordinate, loading_step):
         super().__init__(unique_id, model)
         self.home_coordinate = home_coordinate
+        self.loading_step = loading_step
+        self.current_loading_step = 0
         self.filling_pos = None
         self.kanban_pos = None
         self.status = Status.Free
@@ -47,15 +49,25 @@ class Agv_Agent(Agent):
         if (self.status == Status.Free):
             return False
         if (self.status == Status.GoingTo):
-            if (self.go_horizontally() == True):
-                self.go_vertically()
+            if (self.current_loading_step >= self.loading_step):
+                self.current_loading_step = 0
+                self.goTo()
+            else:
+                self.current_loading_step += 1
         elif (self.status == Status.Filling):
             self.filling_kanban()
             self.status = Status.Comeback
         elif (self.status == Status.Comeback):
-            if (self.comeback_vertically() == True):
-                self.comeback_horizontally()
+            self.comeBack()
         return True
+
+    def goTo(self):
+        if (self.go_horizontally() == True):
+            self.go_vertically()
+
+    def comeBack(self):
+        if (self.comeback_vertically() == True):
+            self.comeback_horizontally()
 
     def filling_kanban(self):
         kanban_agent = self.model.grid.get_cell_list_contents(

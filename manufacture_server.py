@@ -51,13 +51,13 @@ def agent_portrayal(agent):
 
 grid = CanvasGrid(agent_portrayal, 10, 10, 800, 800)
 total_moving_step_graph = BarChartModule(
-    [{"Label": "Total_Moving_Step", "Color": "Red"}],
+    [{"Label": "Total_Moving_Seconds", "Color": "Red"}],
     scope="agent",
     data_collector_name='data_collector'
 )
 
 total_working_step_graph = BarChartModule(
-    [{"Label": "Total_Working_Step", "Color": "Red"}],
+    [{"Label": "Total_Working_Seconds", "Color": "Red"}],
     scope="agent",
     data_collector_name='data_collector'
 )
@@ -91,7 +91,7 @@ number_of_products_A_slider = UserSettableParameter(
 
 num_step_to_finish_product_A_slider = UserSettableParameter(
     "slider",
-    "Number of step to finish product A",
+    "Number of seconds to finish product A",
     2,
     1,
     5,
@@ -109,7 +109,7 @@ number_of_products_B_slider = UserSettableParameter(
 
 num_step_to_finish_product_B_slider = UserSettableParameter(
     "slider",
-    "Number of step to finish product B",
+    "Number of seconds to finish product B",
     2,
     1,
     5,
@@ -126,12 +126,10 @@ num_agv_slider = UserSettableParameter(
 )
 
 num_min_kanban_to_refill_slider = UserSettableParameter(
-    "slider",
+    "choice",
     "Minimum of kanban to refill",
-    1,
-    0,
-    2,
-    1
+    value=1,
+    choices=[0, 1, 2]
 )
 
 agent_movement_radius_choice = UserSettableParameter(
@@ -139,6 +137,12 @@ agent_movement_radius_choice = UserSettableParameter(
     'Agent movement radius (squares)',
     value=4,
     choices=[4, 5, 7])
+
+num_agv_loading_step_choice = UserSettableParameter(
+    'choice',
+    'Loading time for agv (seconds)',
+    value=1,
+    choices=[1, 2, 3, 4, 5, 6, 7, 8])
 
 server = ModularServer(
     Manufacture_Model,
@@ -156,7 +160,8 @@ server = ModularServer(
         "num_max_waiting_products": num_max_waiting_products_slider,
         "num_agv": num_agv_slider,
         "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,
-        "movement_radius": agent_movement_radius_choice
+        "movement_radius": agent_movement_radius_choice,
+        "num_agv_loading_step": num_agv_loading_step_choice
     }
 )
 

@@ -29,7 +29,8 @@ class Manufacture_Model(Model):
             num_max_waiting_products,
             num_agv,
             num_min_kanban_to_refill,
-            movement_radius):
+            movement_radius,
+            num_agv_loading_step):
         super().__init__()
 
         # setup product_dict
@@ -122,7 +123,8 @@ class Manufacture_Model(Model):
             agv_agent = Agv_Agent(
                 i,
                 self,
-                agv_station_pos
+                agv_station_pos,
+                num_agv_loading_step
             )
             self.grid.place_agent(
                 agv_agent, agv_agent.home_coordinate)
@@ -131,8 +133,8 @@ class Manufacture_Model(Model):
         # setup DataCollector
         self.data_collector = DataCollector(
             model_reporters={},
-            agent_reporters={"Total_Working_Step": lambda agent: agent.working_step_count,
-                             "Total_Moving_Step": lambda agent: agent.moving_step_count}
+            agent_reporters={"Total_Working_Seconds": lambda agent: agent.working_step_count,
+                             "Total_Moving_Seconds": lambda agent: agent.moving_step_count}
         )
         self.data_collector.collect(self)
 
