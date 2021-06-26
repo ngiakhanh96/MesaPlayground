@@ -30,8 +30,13 @@ class Manufacture_Model(Model):
             num_agv,
             num_min_kanban_to_refill,
             movement_radius,
+            num_max_kanban,
             num_agv_loading_step):
         super().__init__()
+
+        # setup Grid and Schedule
+        self.grid = MultiGrid(width, height, False)
+        self.schedule = SimultaneousActivation(self)
 
         # setup product_dict
         self.product_dict = {
@@ -45,10 +50,6 @@ class Manufacture_Model(Model):
             }
         }
 
-        # setup Grid and Schedule
-        self.grid = MultiGrid(width, height, False)
-        self.schedule = SimultaneousActivation(self)
-
         # setup product array
         self.current_unprocessed_product_arr = []
         for i in range(self.product_dict["A"]["num_product"]):
@@ -59,19 +60,18 @@ class Manufacture_Model(Model):
 
         # setup Spot_Agent, Product_Agent, Kanban_Agent
         self.num_max_waiting_products = num_max_waiting_products
-        self.num_max_kanban = 3
+        self.num_max_kanban = num_max_kanban
         self.kanban_agent_dict = {}
-        num_spot_pos = len(get_spot_pos_list())
-        for i in range(num_spot_pos):
-            spot_pos = get_spot_pos_from_dict(str(i))
+        for key,spot_pos in spot_pos_dict_conf.items():
+            unique_id = int(key)
             spot_agent = Spot_Agent(
-                i,
+                unique_id,
                 self,
                 spot_pos)
             self.grid.place_agent(spot_agent, spot_agent.coordinate)
 
             product_agent = Product_Agent(
-                i,
+                unique_id,
                 self,
                 0,
                 0,
@@ -80,12 +80,12 @@ class Manufacture_Model(Model):
             if (product_agent.coordinate is not None):
                 self.grid.place_agent(product_agent, product_agent.coordinate)
 
-            kanban_pos = get_kanban_pos_from_dict(str(i))
+            kanban_pos = get_kanban_pos_from_dict(key)
             kanban_agent = Kanban_Agent(
-                i,
+                unique_id,
                 self,
                 kanban_pos,
-                randint(0, 3),
+                randint(0, self.num_max_kanban),
                 self.num_max_kanban
             )
             self.grid.place_agent(kanban_agent, kanban_agent.coordinate)
@@ -93,7 +93,7 @@ class Manufacture_Model(Model):
 
         # setup Person_Agent
         self.num_person_agent = num_person_agent
-        default_coordinates = get_spot_pos_list()
+        default_coordinates = get_spot_pos_list
         random_coordinates = random.sample(
             default_coordinates, self.num_person_agent)
         for i in range(self.num_person_agent):
@@ -124,11 +124,12 @@ class Manufacture_Model(Model):
                 i,
                 self,
                 agv_station_pos,
-                num_agv_loading_step
+                num_agv_loading_step,
+                Agv_Type.Left if i == 0 else Agv_Type.Right
             )
             self.grid.place_agent(
                 agv_agent, agv_agent.home_coordinate)
-            self.agv_agent_dict[str(agv_agent.unique_id)] = agv_agent
+            self.agv_agent_dict[agv_agent.type.name] = agv_agent
 
         # setup DataCollector
         self.data_collector = DataCollector(
@@ -168,23 +169,18 @@ class Manufacture_Model(Model):
             kanban_agent.advance()
 
     def step_agvs(self):
-        self.step_agv("0")
-        self.step_agv("1")
+        for agv_agent in self.agv_agent_dict.values():
+            self.step_agv(agv_agent)
 
-    def step_agv(self, left_or_right):
+    def step_agv(self, agv_agent):
         is_working_agv = True
-        agv_agent = self.agv_agent_dict[left_or_right]
         if (agv_agent.fulfill_duty() == False):
-            kanban_key_list = []
-            if (left_or_right == "0"):
-                kanban_key_list = list(get_left_kanban_pos_dict().keys())
-            else:
-                kanban_key_list = list(get_right_kanban_pos_dict().keys())
+            kanban_pos_key_list = list(agv_agent.kanban_pos_dict.keys())
 
-            need_to_refill_kanban_key_list = list(filter(
-                lambda kanban_key: self.kanban_agent_dict[
-                    kanban_key].num_available_kanban <= self.num_min_kanban_to_refill,
-                kanban_key_list))
+            need_to_refill_kanban_key_list = [
+                kanban_pos_key for kanban_pos_key in kanban_pos_key_list 
+                if self.kanban_agent_dict[kanban_pos_key].num_available_kanban <= self.num_min_kanban_to_refill]
+             
             need_to_refill_kanban_key_list.sort(key=lambda kanban_key: self.kanban_agent_dict[
                 kanban_key].num_available_kanban)
             if (len(need_to_refill_kanban_key_list) > 0):
@@ -196,7 +192,7 @@ class Manufacture_Model(Model):
         return is_working_agv
 
     def advance_agvs(self):
-        for agv_agent in list(self.agv_agent_dict.values()):
+        for agv_agent in self.agv_agent_dict.values():
             agv_agent.advance()
 
     def orchestrate_agv(self):
@@ -206,9 +202,10 @@ class Manufacture_Model(Model):
         else:
             agv_agent_list = list(self.agv_agent_dict.values())
             if (agv_agent_list[0].fulfill_duty() == False and agv_agent_list[1].fulfill_duty() == False):
-                side_list = ["0", "1"]
-                random.shuffle(side_list)
-                if (self.step_agv(side_list[0]) == False):
-                    self.step_agv(side_list[1])
+                agv_agent_dict_keys = list(self.agv_agent_dict.keys())
+                random.shuffle(agv_agent_dict_keys)
+                for key in agv_agent_dict_keys:
+                    if (self.step_agv(self.agv_agent_dict[key]) == True):
+                        break
 
         self.advance_agvs()

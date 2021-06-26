@@ -1,7 +1,4 @@
 from mesa import Agent
-import random
-
-
 class Kanban_Agent(Agent):
     def __init__(self, unique_id, model, coordinate, num_available_kanban, max_kanban):
         super().__init__(unique_id, model)

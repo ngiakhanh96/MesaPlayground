@@ -1,8 +1,10 @@
 from mesa import Agent
-import random
 from utilities import *
 import enum
 
+class Agv_Type(enum.Enum):
+    Left = 0,
+    Right = 1
 
 class Status(enum.Enum):
     Free = 1
@@ -13,17 +15,34 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, model, home_coordinate, loading_step):
+    def __init__(self, unique_id, model, home_coordinate, loading_step, type):
         super().__init__(unique_id, model)
         self.home_coordinate = home_coordinate
         self.loading_step = loading_step
+        self.type = type
         self.current_loading_step = 0
+        
         self.filling_pos = None
         self.kanban_pos = None
         self.status = Status.Free
-        self.set_status_loading = False
+        self.become_free = False
         self.distance_from_home_to_cornerX = 3
-        if (self.unique_id == 0):
+
+        self.setup()
+
+    def setup(self):
+        self.setup_kanban_pos_dict()
+        self.setup_coordinations()
+
+    def setup_kanban_pos_dict(self):
+        self.kanban_pos_dict = {}
+        kanban_pos_dict = left_kanban_pos_dict_conf if self.type == Agv_Type.Left else right_kanban_pos_dict_conf
+        for key,kanban_pos in kanban_pos_dict.items():
+            if key in spot_pos_dict_conf:
+                self.kanban_pos_dict[key] = kanban_pos
+
+    def setup_coordinations(self):
+        if (self.type == Agv_Type.Left):
             self.cornerX = self.home_coordinate[0] - \
                 self.distance_from_home_to_cornerX
         else:
@@ -32,28 +51,26 @@ class Agv_Agent(Agent):
 
     def refill_kanban(self, destination):
         self.kanban_pos = destination
-        self.filling_pos = convert_kanban_pos_to_filling_pos(
-            destination, str(self.unique_id))
-        self.status = Status.GoingTo
+        self.filling_pos = convert_kanban_pos_to_filling_pos(destination)
+        self.status = Status.Loading
         self.fulfill_duty()
 
     def advance(self):
-        if (self.set_status_loading == True):
-            self.status = Status.Loading
-            self.set_status_loading = False
+        if (self.become_free == True):
+            self.status = Status.Free
+            self.become_free = False
 
     def fulfill_duty(self):
-        if (self.status == Status.Loading):
-            self.status = Status.Free
-            return True
         if (self.status == Status.Free):
             return False
-        if (self.status == Status.GoingTo):
-            if (self.current_loading_step >= self.loading_step):
+        if (self.status == Status.Loading):
+            if (self.current_loading_step >= self.loading_step - 1):
+                self.status = Status.GoingTo
                 self.current_loading_step = 0
-                self.goTo()
             else:
                 self.current_loading_step += 1
+        elif (self.status == Status.GoingTo):
+            self.goTo()
         elif (self.status == Status.Filling):
             self.filling_kanban()
             self.status = Status.Comeback
@@ -101,7 +118,7 @@ class Agv_Agent(Agent):
         next_posY = currentY
         next_pos = (next_posX, next_posY)
         if (is_equal_pos(self.home_coordinate, next_pos) == True):
-            self.set_status_loading = True
+            self.become_free = True
         self.model.grid.move_agent(self, next_pos)
 
     def go_horizontally(self):

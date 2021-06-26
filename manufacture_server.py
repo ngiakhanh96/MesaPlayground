@@ -42,7 +42,7 @@ def agent_portrayal(agent):
         portrayal["r"] = 0.5
         portrayal["text"] = str(agent.unique_id)
         portrayal["text_color"] = "black"
-        if (agent.status != Status.Comeback and agent.status != Status.Loading):
+        if (agent.status != Status.Comeback and agent.status != Status.Loading and agent.status != Status.Free):
             portrayal["Color"] = "blue"
         else:
             portrayal["Color"] = "yellow"
@@ -65,9 +65,9 @@ total_working_step_graph = BarChartModule(
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
-    3,
     1,
-    6,
+    1,
+    len(spot_pos_dict_conf),
     1
 )
 
@@ -83,7 +83,7 @@ num_max_waiting_products_slider = UserSettableParameter(
 number_of_products_A_slider = UserSettableParameter(
     "slider",
     "Number of Product A",
-    3,
+    1,
     0,
     20,
     1
@@ -92,7 +92,7 @@ number_of_products_A_slider = UserSettableParameter(
 num_step_to_finish_product_A_slider = UserSettableParameter(
     "slider",
     "Number of seconds to finish product A",
-    2,
+    1,
     1,
     5,
     1
@@ -101,7 +101,7 @@ num_step_to_finish_product_A_slider = UserSettableParameter(
 number_of_products_B_slider = UserSettableParameter(
     "slider",
     "Number of Product B",
-    3,
+    1,
     0,
     20,
     1
@@ -110,7 +110,7 @@ number_of_products_B_slider = UserSettableParameter(
 num_step_to_finish_product_B_slider = UserSettableParameter(
     "slider",
     "Number of seconds to finish product B",
-    2,
+    1,
     1,
     5,
     1
@@ -135,7 +135,7 @@ num_min_kanban_to_refill_slider = UserSettableParameter(
 agent_movement_radius_choice = UserSettableParameter(
     'choice',
     'Agent movement radius (squares)',
-    value=4,
+    value=7,
     choices=[4, 5, 7])
 
 num_agv_loading_step_choice = UserSettableParameter(
@@ -161,6 +161,7 @@ server = ModularServer(
         "num_agv": num_agv_slider,
         "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,
         "movement_radius": agent_movement_radius_choice,
+        "num_max_kanban": 3,
         "num_agv_loading_step": num_agv_loading_step_choice
     }
 )

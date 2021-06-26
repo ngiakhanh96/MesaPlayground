@@ -82,29 +82,19 @@ class Person_Agent(Agent):
 
     def update_product_agent_waiting_products(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
+        # Not first_position
         if (product_pos is not None):
-            product_agent = self.model.grid.get_cell_list_contents(
-                [product_pos])[0]
-
+            product_agent = self.model.grid.get_cell_list_contents([product_pos])[0]
             product_agent.update_waiting_product(self.current_product, False)
-            next_product_pos = convert_spot_pos_to_next_product_pos(self.pos)
-            if (next_product_pos is not None):
-                next_product_agent = self.model.grid.get_cell_list_contents(
-                    [next_product_pos])[0]
-                next_product_agent.update_waiting_product(
-                    self.current_product, True)
 
-            # last_position
-            else:
-                self.model.update_num_finished_product()
+        next_product_pos = convert_spot_pos_to_next_product_pos(self.pos)
+        if (next_product_pos is not None):
+            next_product_agent = self.model.grid.get_cell_list_contents([next_product_pos])[0]
+            next_product_agent.update_waiting_product(self.current_product, True)
 
-        # first position
+        # last_position
         else:
-            next_product_pos = convert_spot_pos_to_next_product_pos(self.pos)
-            next_product_agent = self.model.grid.get_cell_list_contents(
-                [next_product_pos])[0]
-            next_product_agent.update_waiting_product(
-                self.current_product, True)
+            self.model.update_num_finished_product()
 
     def check_if_anything_new_to_do(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
@@ -119,7 +109,7 @@ class Person_Agent(Agent):
         else:
             return False
 
-    def calculate_next_pos(self, destination, start_doing=True):
+    def calculate_next_pos(self, destination, start_doing_if_available=True):
         if (self.pos is None):
             return None
         currentX, currentY = tuple(self.pos)
@@ -143,18 +133,15 @@ class Person_Agent(Agent):
                     nextPosition = (currentX+1, currentY)
                 elif (currentX > destX):
                     nextPosition = (currentX-1, currentY)
-
-        if (is_equal_pos(nextPosition, destination) and start_doing == True):
-            self.prepare_work()
-
-        if (is_equal_pos(nextPosition, self.pos) and start_doing == True):
-            self.start_work()
+        if (start_doing_if_available == True):
+            if (is_equal_pos(nextPosition, self.pos)):
+                self.start_work()
 
         return nextPosition
 
     def is_in_spot_pos(self):
         return True in (is_equal_pos(self.pos, spot_pos)
-                        for spot_pos in get_spot_pos_list())
+                        for spot_pos in get_spot_pos_list)
 
     def is_spot_pos_in_vision(self, spot_pos):
         distance = 0
@@ -169,9 +156,9 @@ class Person_Agent(Agent):
 
     def find_backward(self):
         isSucceeded = False
-        num_spot_pos = len(get_spot_pos_list())
-        for i in reversed(range(num_spot_pos)):
-            spot_pos = get_spot_pos_from_dict(str(i))
+        reversed_spot_pos_key_list = list(reversed(spot_pos_dict_conf.keys()))
+        for key in reversed_spot_pos_key_list:
+            spot_pos = get_spot_pos_from_dict(key)
             if (self.is_spot_pos_in_vision(spot_pos) == False):
                 continue
 
@@ -179,11 +166,10 @@ class Person_Agent(Agent):
                 spot_pos)
 
             product_pos = convert_spot_pos_to_product_pos(spot_pos)
+            is_next_waiting_products_max = self.check_if_next_waiting_products_max(spot_pos)
             if (product_pos is not None):
                 is_there_any_product = self.check_if_any_waiting_product(
                     product_pos)
-                is_next_waiting_products_max = self.check_if_next_waiting_products_max(
-                    spot_pos)
                 if (is_there_any_person_agent == False and is_there_any_product == True and is_next_waiting_products_max == False):
                     self.move_agent(spot_pos, True)
                     isSucceeded = True
@@ -191,8 +177,6 @@ class Person_Agent(Agent):
 
             # first position
             else:
-                is_next_waiting_products_max = self.check_if_next_waiting_products_max(
-                    spot_pos)
                 if (is_there_any_person_agent == False and is_next_waiting_products_max == False):
                     self.move_agent(spot_pos, True)
                     isSucceeded = True
@@ -217,14 +201,11 @@ class Person_Agent(Agent):
 
     def check_if_any_person_agent_except_me(self, spot_pos):
         cellmates = self.model.grid.get_cell_list_contents([spot_pos])
-        return len(
-            list(filter(lambda x: x.unique_id != self.unique_id, cellmates))) > 1
+        return len([cellmate for cellmate in cellmates if cellmate.unique_id != self.unique_id]) > 1
 
     def find_forward(self):
         last_available_person_agent = False
-        num_spot_pos = len(get_spot_pos_list())
-        for i in range(num_spot_pos):
-            spot_pos = get_spot_pos_from_dict(str(i))
+        for spot_pos in spot_pos_dict_conf.values():
             if (self.is_spot_pos_in_vision(spot_pos) == False):
                 continue
             is_there_any_person_agent = self.check_if_any_person_agent_except_me(
