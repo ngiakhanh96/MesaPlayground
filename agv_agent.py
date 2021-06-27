@@ -15,8 +15,9 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, model, home_coordinate, loading_step, type):
+    def __init__(self, unique_id, name, model, home_coordinate, loading_step, type):
         super().__init__(unique_id, model)
+        self.name = name
         self.home_coordinate = home_coordinate
         self.loading_step = loading_step
         self.type = type

@@ -55,9 +55,9 @@ class Manufacture_Model(Model):
         self.num_max_kanban = num_max_kanban
         self.kanban_agent_dict = {}
         for key,spot_pos in spot_pos_dict_conf.items():
-            unique_id = int(key)
             spot_agent = Spot_Agent(
-                unique_id,
+                "S"+key,
+                key,
                 self,
                 spot_pos,
                 product_processing_duration_dict_conf[key]["A"],
@@ -65,7 +65,8 @@ class Manufacture_Model(Model):
             self.grid.place_agent(spot_agent, spot_agent.coordinate)
 
             product_agent = Product_Agent(
-                unique_id,
+                "P"+key,
+                key,
                 self,
                 0,
                 0,
@@ -76,14 +77,15 @@ class Manufacture_Model(Model):
 
             kanban_pos = get_kanban_pos_from_dict(key)
             kanban_agent = Kanban_Agent(
-                unique_id,
+                "K"+key,
+                key,
                 self,
                 kanban_pos,
                 randint(0, self.num_max_kanban),
                 self.num_max_kanban
             )
             self.grid.place_agent(kanban_agent, kanban_agent.coordinate)
-            self.kanban_agent_dict[str(kanban_agent.unique_id)] = kanban_agent
+            self.kanban_agent_dict[key] = kanban_agent
 
         # setup Person_Agent
         self.num_person_agent = num_person_agent
@@ -93,6 +95,7 @@ class Manufacture_Model(Model):
         for i in range(self.num_person_agent):
             person_agent = Person_Agent(
                 "A"+str(i),
+                i,
                 self,
                 movement_radius)
             self.grid.place_agent(person_agent, random_coordinates[i])
@@ -105,29 +108,30 @@ class Manufacture_Model(Model):
         for i in range(2):
             agv_station_pos = get_agv_station_pos_from_dict(str(i))
             agv_station_agent = Agv_Station_Agent(
+                "AgvS"+str(i),
                 i,
                 self,
                 agv_station_pos
             )
-            self.grid.place_agent(
-                agv_station_agent, agv_station_agent.coordinate)
+            self.grid.place_agent(agv_station_agent, agv_station_agent.coordinate)
 
             agv_agent = Agv_Agent(
+                "Agv"+str(i),
                 i,
                 self,
                 agv_station_pos,
                 num_agv_loading_step,
                 Agv_Type.Left if i == 0 else Agv_Type.Right
             )
-            self.grid.place_agent(
-                agv_agent, agv_agent.home_coordinate)
+            self.grid.place_agent(agv_agent, agv_agent.home_coordinate)
             self.agv_agent_dict[agv_agent.type.name] = agv_agent
 
         # setup DataCollector
         self.data_collector = DataCollector(
             model_reporters={},
-            agent_reporters={"Total_Working_Seconds": lambda agent: agent.working_step_count,
-                             "Total_Moving_Seconds": lambda agent: agent.moving_step_count}
+            agent_reporters={"Total_Working_Seconds": lambda agent: agent.total_working_step_count,
+                             "Total_Moving_Seconds": lambda agent: agent.total_moving_step_count,
+                             "Total_Waiting_Seconds": lambda agent: agent.total_waiting_step_count}
         )
         self.data_collector.collect(self)
 

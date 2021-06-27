@@ -3,16 +3,29 @@ from utilities import *
 
 
 class Person_Agent(Agent):
-    def __init__(self, unique_id, model, movement_radius):
+    def __init__(self, unique_id, name, model, movement_radius):
         super().__init__(unique_id, model)
+        self.name = name
         self.movement_radius = movement_radius
         self.current_product = None
         self.current_product_processing_duration = None
         self.current_doing_duration = None
         self.old_pos = self.pos
         self.is_update_product_agent_waiting_products = False
-        self.moving_step_count = 0
-        self.working_step_count = 0
+        self.current_spot_id = None
+        self.try_to_continue_if_available = True
+        self.setup_data_collector()
+
+    def setup_data_collector(self):
+        self.total_moving_step_count = 0
+        self.total_working_step_count = 0
+        self.total_waiting_step_count = 0
+
+        self.working_step_count_dict = {}
+        self.waiting_step_count_dict = {}
+        for spot_id in spot_pos_dict_conf.keys():
+            self.working_step_count_dict[spot_id] = 0
+            self.waiting_step_count_dict[spot_id] = 0
 
     def advance(self):
         if (self.is_update_product_agent_waiting_products == True):
@@ -20,6 +33,7 @@ class Person_Agent(Agent):
             self.is_update_product_agent_waiting_products = False
 
     def step(self):
+        self.update_current_spot_id()
         self.check_if_change_product()
         if (self.is_manufacturing() == True):
             return
@@ -27,6 +41,11 @@ class Person_Agent(Agent):
         self.old_pos = self.pos
         if (self.find_backward() == False):
             self.find_forward()
+
+    def update_current_spot_id(self):
+        if (self.is_in_spot_pos() == True):
+            spot_agent = self.get_cellmates(self.pos)[0]
+            self.current_spot_id = str(spot_agent.name)
 
     def check_if_change_product(self):
         current_product = self.model.get_current_processing_product()
@@ -42,7 +61,7 @@ class Person_Agent(Agent):
 
     def prepare_work(self):
         self.current_doing_duration = 0
-        spot_agent = self.model.grid.get_cell_list_contents([self.pos])[0]
+        spot_agent = self.get_cellmates(self.pos)[0]
         self.current_product_processing_duration = spot_agent.product_processing_duration_dict[self.current_product]
 
     def start_work(self):
@@ -56,11 +75,21 @@ class Person_Agent(Agent):
         kanban_pos = convert_spot_pos_to_kanban_pos(self.pos)
         kanban_agent = self.model.grid.get_cell_list_contents([kanban_pos])[0]
         if (kanban_agent.is_any_available_kanban() == False):
+            self.update_waiting_step_count()
             return
         kanban_agent.consume()
         self.current_doing_duration += 1
-        self.working_step_count += 1
+        self.update_working_step_count()
         return self.check_if_done_work()
+
+    def update_working_step_count(self):
+        self.total_working_step_count += 1
+        self.working_step_count_dict[self.current_spot_id] += 1
+
+    
+    def update_waiting_step_count(self):
+        self.waiting_step_count_dict[self.current_spot_id] += 1
+        self.total_waiting_step_count += 1
 
     def check_if_done_work(self):
         if (self.current_doing_duration >= self.current_product_processing_duration):
@@ -71,10 +100,12 @@ class Person_Agent(Agent):
 
     def is_manufacturing(self):
         if (self.current_doing_duration is None):
-            # If had just done or waiting
-            if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
-                self.start_work()
-                return True
+            # If had just done or waiting, try to continue if available
+            if (self.try_to_continue_if_available == True):
+                if (self.is_moving() == False and self.check_if_anything_new_to_do() == True):
+                    self.start_work()
+                    return True
+
             return False
 
         self.progress_work()
@@ -99,17 +130,15 @@ class Person_Agent(Agent):
     def check_if_anything_new_to_do(self):
         product_pos = convert_spot_pos_to_product_pos(self.pos)
         if (product_pos is not None):
-            is_there_any_product = self.check_if_any_waiting_product(
-                product_pos)
-            is_next_waiting_products_max = self.check_if_next_waiting_products_max(
-                self.pos)
+            is_there_any_product = self.check_if_any_waiting_product(product_pos)
+            is_next_waiting_products_max = self.check_if_next_waiting_products_max(self.pos)
             return is_there_any_product == True and is_next_waiting_products_max == False
 
         # first position
         else:
             return False
 
-    def calculate_next_pos(self, destination, start_doing_if_available=True):
+    def calculate_next_pos(self, destination, force_start=True):
         if (self.pos is None):
             return None
         currentX, currentY = tuple(self.pos)
@@ -133,10 +162,11 @@ class Person_Agent(Agent):
                     nextPosition = (currentX+1, currentY)
                 elif (currentX > destX):
                     nextPosition = (currentX-1, currentY)
-        if (start_doing_if_available == True):
-            if (is_equal_pos(nextPosition, self.pos)):
+        if (is_equal_pos(nextPosition, self.pos)):
+            if (force_start == True):
                 self.start_work()
-
+            else:
+                self.update_waiting_step_count()
         return nextPosition
 
     def is_in_spot_pos(self):
@@ -162,14 +192,12 @@ class Person_Agent(Agent):
             if (self.is_spot_pos_in_vision(spot_pos) == False):
                 continue
 
-            is_there_any_person_agent = self.check_if_any_person_agent_except_me(
-                spot_pos)
+            is_there_any_person_agent = self.check_if_any_other_person_agent_in_spot_pos(spot_pos)
 
             product_pos = convert_spot_pos_to_product_pos(spot_pos)
             is_next_waiting_products_max = self.check_if_next_waiting_products_max(spot_pos)
             if (product_pos is not None):
-                is_there_any_product = self.check_if_any_waiting_product(
-                    product_pos)
+                is_there_any_product = self.check_if_any_waiting_product(product_pos)
                 if (is_there_any_person_agent == False and is_there_any_product == True and is_next_waiting_products_max == False):
                     self.move_agent(spot_pos, True)
                     isSucceeded = True
@@ -184,41 +212,38 @@ class Person_Agent(Agent):
         return isSucceeded
 
     def check_if_any_waiting_product(self, product_pos):
-        product_agent = self.model.grid.get_cell_list_contents(
-            [product_pos])[0]
-
+        product_agent = self.model.grid.get_cell_list_contents([product_pos])[0]
         return product_agent.check_if_any_waiting_product(self.current_product)
 
     def check_if_next_waiting_products_max(self, spot_pos):
         is_max_waiting_products_next_product_pos = False
         next_product_pos = convert_spot_pos_to_next_product_pos(spot_pos)
         if (next_product_pos is not None):
-            next_product_agent = self.model.grid.get_cell_list_contents(
-                [next_product_pos])[0]
-            is_max_waiting_products_next_product_pos = next_product_agent.check_if_waiting_product_max(
-                self.current_product)
+            next_product_agent = self.model.grid.get_cell_list_contents([next_product_pos])[0]
+            is_max_waiting_products_next_product_pos = next_product_agent.check_if_waiting_product_max(self.current_product)
         return is_max_waiting_products_next_product_pos
 
-    def check_if_any_person_agent_except_me(self, spot_pos):
-        cellmates = self.model.grid.get_cell_list_contents([spot_pos])
-        return len([cellmate for cellmate in cellmates if cellmate.unique_id != self.unique_id]) > 1
+    def get_cellmates(self, pos):
+        all_agents_in_cell = self.model.grid.get_cell_list_contents([pos])
+        return [agent for agent in all_agents_in_cell if agent.unique_id != self.unique_id]
+
+    def check_if_any_other_person_agent_in_spot_pos(self, spot_pos):
+        cellmates = self.get_cellmates(spot_pos)
+        return len(cellmates) > 1
+
 
     def find_forward(self):
-        last_available_person_agent = False
         for spot_pos in spot_pos_dict_conf.values():
             if (self.is_spot_pos_in_vision(spot_pos) == False):
                 continue
-            is_there_any_person_agent = self.check_if_any_person_agent_except_me(
-                spot_pos)
+            is_there_any_person_agent = self.check_if_any_other_person_agent_in_spot_pos(spot_pos)
 
-            if (is_there_any_person_agent == True):
-                last_available_person_agent = is_there_any_person_agent
-            elif (last_available_person_agent == True):
+            if (is_there_any_person_agent == False):
                 self.move_agent(spot_pos, False)
                 return
 
-    def move_agent(self, destination_spot, start_doing_if_available):
-        next_pos = self.calculate_next_pos(destination_spot, start_doing_if_available)
+    def move_agent(self, destination_spot, force_start):
+        next_pos = self.calculate_next_pos(destination_spot, force_start)
         if (is_equal_pos(self.pos, next_pos) == False):
-            self.moving_step_count += 1
+            self.total_moving_step_count += 1
         self.model.grid.move_agent(self, next_pos)

@@ -5,12 +5,14 @@ class Product_Agent(Agent):
     def __init__(
             self,
             unique_id,
+            name,
             model,
             num_waiting_product_A,
             num_waiting_product_B,
             num_max_waiting_products,
             coordinate):
         super().__init__(unique_id, model)
+        self.name = name
         self.num_waiting_product_dict = {
             "A": num_waiting_product_A,
             "B": num_waiting_product_B
@@ -19,7 +21,7 @@ class Product_Agent(Agent):
         self.coordinate = coordinate
 
     def update_waiting_product(self, product_name, is_up):
-        if (is_up):
+        if (is_up == True):
             self.num_waiting_product_dict[product_name] += 1
         else:
             self.num_waiting_product_dict[product_name] -= 1

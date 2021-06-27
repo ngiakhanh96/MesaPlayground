@@ -62,6 +62,12 @@ total_working_step_graph = BarChartModule(
     data_collector_name='data_collector'
 )
 
+total_waiting_step_graph = BarChartModule(
+    [{"Label": "Total_Waiting_Seconds", "Color": "Red"}],
+    scope="agent",
+    data_collector_name='data_collector'
+)
+
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
@@ -128,7 +134,7 @@ num_agv_loading_step_choice = UserSettableParameter(
 
 server = ModularServer(
     Manufacture_Model,
-    [grid, total_moving_step_graph, total_working_step_graph],
+    [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph],
     # [grid],
     "Manufacture Model",
     {
