@@ -28,6 +28,7 @@ class Agv_Agent(Agent):
         self.status = Status.Free
         self.become_free = False
         self.distance_from_home_to_cornerX = 3
+        self.waiting_step_count = 0
 
         self.setup()
 
@@ -72,14 +73,14 @@ class Agv_Agent(Agent):
             self.filling_kanban()
             self.status = Status.Comeback
         elif (self.status == Status.Comeback):
-            self.comeBack()
+            self.comeback()
         return True
 
     def goTo(self):
         if (self.go_horizontally() == True):
             self.go_vertically()
 
-    def comeBack(self):
+    def comeback(self):
         if (self.comeback_vertically() == True):
             self.comeback_horizontally()
 

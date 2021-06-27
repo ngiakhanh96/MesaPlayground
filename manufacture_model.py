@@ -95,7 +95,7 @@ class Manufacture_Model(Model):
         for i in range(self.num_person_agent):
             person_agent = Person_Agent(
                 "A"+str(i),
-                i,
+                str(i),
                 self,
                 movement_radius)
             self.grid.place_agent(person_agent, random_coordinates[i])
@@ -105,11 +105,12 @@ class Manufacture_Model(Model):
         self.num_agv = num_agv
         self.num_min_kanban_to_refill = num_min_kanban_to_refill
         self.agv_agent_dict = {}
+        self.agv_agent_waiting_step_count_dict = {}
         for i in range(2):
             agv_station_pos = get_agv_station_pos_from_dict(str(i))
             agv_station_agent = Agv_Station_Agent(
                 "AgvS"+str(i),
-                i,
+                str(i),
                 self,
                 agv_station_pos
             )
@@ -117,18 +118,20 @@ class Manufacture_Model(Model):
 
             agv_agent = Agv_Agent(
                 "Agv"+str(i),
-                i,
+                str(i),
                 self,
                 agv_station_pos,
                 num_agv_loading_step,
                 Agv_Type.Left if i == 0 else Agv_Type.Right
             )
             self.grid.place_agent(agv_agent, agv_agent.home_coordinate)
-            self.agv_agent_dict[agv_agent.type.name] = agv_agent
+            self.agv_agent_dict[agv_agent.name] = agv_agent
+            self.agv_agent_waiting_step_count_dict[agv_agent.name] = 0
 
         # setup DataCollector
         self.data_collector = DataCollector(
-            model_reporters={},
+            model_reporters={"Agv_0_Total_Waiting_Seconds": lambda model: model.agv_agent_waiting_step_count_dict['0'],
+                             "Agv_1_Total_Waiting_Seconds": lambda model: model.agv_agent_waiting_step_count_dict['1']},
             agent_reporters={"Total_Working_Seconds": lambda agent: agent.total_working_step_count,
                              "Total_Moving_Seconds": lambda agent: agent.total_moving_step_count,
                              "Total_Waiting_Seconds": lambda agent: agent.total_waiting_step_count}
@@ -160,7 +163,9 @@ class Manufacture_Model(Model):
 
     def step_agvs(self):
         for agv_agent in self.agv_agent_dict.values():
-            self.step_agv(agv_agent)
+            is_working_agv = self.step_agv(agv_agent)
+            if (is_working_agv == False):
+                self.agv_agent_waiting_step_count_dict[agv_agent.name] += 1
 
     def step_agv(self, agv_agent):
         is_working_agv = True
@@ -193,9 +198,13 @@ class Manufacture_Model(Model):
             agv_agent_list = list(self.agv_agent_dict.values())
             if (agv_agent_list[0].fulfill_duty() == False and agv_agent_list[1].fulfill_duty() == False):
                 agv_agent_dict_keys = list(self.agv_agent_dict.keys())
-                random.shuffle(agv_agent_dict_keys)
-                for key in agv_agent_dict_keys:
+                shuffled_agv_agent_dict_keys = random.sample(agv_agent_dict_keys, len(agv_agent_dict_keys))
+                at_least_one_work = False
+                for key in shuffled_agv_agent_dict_keys:
                     if (self.step_agv(self.agv_agent_dict[key]) == True):
+                        at_least_one_work = True
                         break
+                if (at_least_one_work == False):
+                    self.agv_agent_waiting_step_count_dict[agv_agent_dict_keys[0]] += 1
 
         self.advance_agvs()

@@ -34,8 +34,8 @@ class Person_Agent(Agent):
 
     def step(self):
         self.update_current_spot_id()
-        self.check_if_change_product()
-        if (self.is_manufacturing() == True):
+        self.handle_product_changed()
+        if (self.try_manufacture() == True):
             return
 
         self.old_pos = self.pos
@@ -47,7 +47,7 @@ class Person_Agent(Agent):
             spot_agent = self.get_cellmates(self.pos)[0]
             self.current_spot_id = str(spot_agent.name)
 
-    def check_if_change_product(self):
+    def handle_product_changed(self):
         current_product = self.model.get_current_processing_product()
         if (current_product != self.current_product):
             self.reset_work()
@@ -80,7 +80,7 @@ class Person_Agent(Agent):
         kanban_agent.consume()
         self.current_doing_duration += 1
         self.update_working_step_count()
-        return self.check_if_done_work()
+        return self.handle_done_work()
 
     def update_working_step_count(self):
         self.total_working_step_count += 1
@@ -91,14 +91,14 @@ class Person_Agent(Agent):
         self.waiting_step_count_dict[self.current_spot_id] += 1
         self.total_waiting_step_count += 1
 
-    def check_if_done_work(self):
+    def handle_done_work(self):
         if (self.current_doing_duration >= self.current_product_processing_duration):
             self.is_update_product_agent_waiting_products = True
             self.reset_work()
             return True
         return False
 
-    def is_manufacturing(self):
+    def try_manufacture(self):
         if (self.current_doing_duration is None):
             # If had just done or waiting, try to continue if available
             if (self.try_to_continue_if_available == True):
@@ -137,37 +137,6 @@ class Person_Agent(Agent):
         # first position
         else:
             return False
-
-    def calculate_next_pos(self, destination, force_start=True):
-        if (self.pos is None):
-            return None
-        currentX, currentY = tuple(self.pos)
-        destX, destY = destination
-
-        nextPosition = (currentX, currentY)
-
-        is_in_spot_pos = self.is_in_spot_pos()
-        if (is_in_spot_pos == True and is_equal_pos(self.pos, destination) == False):
-            if (currentX == left_x_pos_spot_column):
-                nextPosition = (currentX+1, currentY)
-            else:
-                nextPosition = (currentX-1, currentY)
-        else:
-            if (currentY < destY):
-                nextPosition = (currentX, currentY+1)
-            elif (currentY > destY):
-                nextPosition = (currentX, currentY-1)
-            else:
-                if (currentX < destX):
-                    nextPosition = (currentX+1, currentY)
-                elif (currentX > destX):
-                    nextPosition = (currentX-1, currentY)
-        if (is_equal_pos(nextPosition, self.pos)):
-            if (force_start == True):
-                self.start_work()
-            else:
-                self.update_waiting_step_count()
-        return nextPosition
 
     def is_in_spot_pos(self):
         return True in (is_equal_pos(self.pos, spot_pos)
@@ -231,7 +200,6 @@ class Person_Agent(Agent):
         cellmates = self.get_cellmates(spot_pos)
         return len(cellmates) > 1
 
-
     def find_forward(self):
         for spot_pos in spot_pos_dict_conf.values():
             if (self.is_spot_pos_in_vision(spot_pos) == False):
@@ -243,7 +211,39 @@ class Person_Agent(Agent):
                 return
 
     def move_agent(self, destination_spot, force_start):
-        next_pos = self.calculate_next_pos(destination_spot, force_start)
-        if (is_equal_pos(self.pos, next_pos) == False):
+        next_pos = self.calculate_next_pos(destination_spot)
+        if (is_equal_pos(next_pos, self.pos) == True):
+            if (force_start == True):
+                self.start_work()
+            else:
+                self.update_waiting_step_count()
+        else:
             self.total_moving_step_count += 1
         self.model.grid.move_agent(self, next_pos)
+
+    def calculate_next_pos(self, destination):
+        # if (self.pos is None):
+        #     return None
+        currentX, currentY = tuple(self.pos)
+        destX, destY = destination
+
+        nextPosition = (currentX, currentY)
+
+        is_in_spot_pos = self.is_in_spot_pos()
+        if (is_in_spot_pos == True and is_equal_pos(self.pos, destination) == False):
+            if (currentX == left_x_pos_spot_column):
+                nextPosition = (currentX+1, currentY)
+            else:
+                nextPosition = (currentX-1, currentY)
+        else:
+            if (currentY < destY):
+                nextPosition = (currentX, currentY+1)
+            elif (currentY > destY):
+                nextPosition = (currentX, currentY-1)
+            else:
+                if (currentX < destX):
+                    nextPosition = (currentX+1, currentY)
+                elif (currentX > destX):
+                    nextPosition = (currentX-1, currentY)
+        
+        return nextPosition

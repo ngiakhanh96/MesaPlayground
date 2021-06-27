@@ -44,6 +44,8 @@ def agent_portrayal(agent):
         portrayal["text_color"] = "black"
         if (agent.status != Status.Comeback and agent.status != Status.Loading and agent.status != Status.Free):
             portrayal["Color"] = "blue"
+        elif (agent.status == Status.Loading):
+            portrayal["Color"] = "orange"
         else:
             portrayal["Color"] = "yellow"
     return portrayal
@@ -65,6 +67,18 @@ total_working_step_graph = BarChartModule(
 total_waiting_step_graph = BarChartModule(
     [{"Label": "Total_Waiting_Seconds", "Color": "Red"}],
     scope="agent",
+    data_collector_name='data_collector'
+)
+
+agv_0_total_waiting_step_graph = BarChartModule(
+    [{"Label": "Agv_0_Total_Waiting_Seconds", "Color": "Red"}],
+    scope="model",
+    data_collector_name='data_collector'
+)
+
+agv_1_total_waiting_step_graph = BarChartModule(
+    [{"Label": "Agv_1_Total_Waiting_Seconds", "Color": "Red"}],
+    scope="model",
     data_collector_name='data_collector'
 )
 
@@ -134,8 +148,8 @@ num_agv_loading_step_choice = UserSettableParameter(
 
 server = ModularServer(
     Manufacture_Model,
-    [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph],
-    # [grid],
+    [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph, agv_0_total_waiting_step_graph, agv_1_total_waiting_step_graph],
+    # [grid, agv_0_total_waiting_step_graph, agv_1_total_waiting_step_graph],
     "Manufacture Model",
     {
         "width": 10,
