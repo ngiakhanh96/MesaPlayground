@@ -3,16 +3,16 @@ from utilities import *
 
 
 class Person_Agent(Agent):
-    def __init__(self, unique_id, model, current_product, each_step_duration, movement_radius):
+    def __init__(self, unique_id, model, movement_radius):
         super().__init__(unique_id, model)
-        self.current_product = current_product
-        self.each_step_duration = each_step_duration
+        self.movement_radius = movement_radius
+        self.current_product = None
+        self.current_product_processing_duration = None
         self.current_doing_duration = None
         self.old_pos = self.pos
         self.is_update_product_agent_waiting_products = False
         self.moving_step_count = 0
         self.working_step_count = 0
-        self.movement_radius = movement_radius
 
     def advance(self):
         if (self.is_update_product_agent_waiting_products == True):
@@ -32,7 +32,6 @@ class Person_Agent(Agent):
         current_product = self.model.get_current_processing_product()
         if (current_product != self.current_product):
             self.reset_work()
-            self.each_step_duration = self.model.get_current_processing_product_step()
             self.current_product = current_product
 
     def is_moving(self):
@@ -43,6 +42,8 @@ class Person_Agent(Agent):
 
     def prepare_work(self):
         self.current_doing_duration = 0
+        spot_agent = self.model.grid.get_cell_list_contents([self.pos])[0]
+        self.current_product_processing_duration = spot_agent.product_processing_duration_dict[self.current_product]
 
     def start_work(self):
         self.prepare_work()
@@ -53,8 +54,7 @@ class Person_Agent(Agent):
 
     def progress_work(self):
         kanban_pos = convert_spot_pos_to_kanban_pos(self.pos)
-        kanban_agent = self.model.grid.get_cell_list_contents(
-            [kanban_pos])[0]
+        kanban_agent = self.model.grid.get_cell_list_contents([kanban_pos])[0]
         if (kanban_agent.is_any_available_kanban() == False):
             return
         kanban_agent.consume()
@@ -63,7 +63,7 @@ class Person_Agent(Agent):
         return self.check_if_done_work()
 
     def check_if_done_work(self):
-        if (self.current_doing_duration >= self.each_step_duration):
+        if (self.current_doing_duration >= self.current_product_processing_duration):
             self.is_update_product_agent_waiting_products = True
             self.reset_work()
             return True
@@ -119,7 +119,7 @@ class Person_Agent(Agent):
 
         is_in_spot_pos = self.is_in_spot_pos()
         if (is_in_spot_pos == True and is_equal_pos(self.pos, destination) == False):
-            if (currentX == 3):
+            if (currentX == left_x_pos_spot_column):
                 nextPosition = (currentX+1, currentY)
             else:
                 nextPosition = (currentX-1, currentY)
@@ -217,8 +217,8 @@ class Person_Agent(Agent):
                 self.move_agent(spot_pos, False)
                 return
 
-    def move_agent(self, destination_spot, start_doing):
-        next_pos = self.calculate_next_pos(destination_spot, start_doing)
+    def move_agent(self, destination_spot, start_doing_if_available):
+        next_pos = self.calculate_next_pos(destination_spot, start_doing_if_available)
         if (is_equal_pos(self.pos, next_pos) == False):
             self.moving_step_count += 1
         self.model.grid.move_agent(self, next_pos)

@@ -23,9 +23,7 @@ class Manufacture_Model(Model):
             height,
             num_person_agent,
             num_product_A,
-            each_step_duration_A,
             num_product_B,
-            each_step_duration_B,
             num_max_waiting_products,
             num_agv,
             num_min_kanban_to_refill,
@@ -39,22 +37,16 @@ class Manufacture_Model(Model):
         self.schedule = SimultaneousActivation(self)
 
         # setup product_dict
-        self.product_dict = {
-            "A": {
-                "each_step_duration": each_step_duration_A,
-                "num_product": num_product_A
-            },
-            "B": {
-                "each_step_duration": each_step_duration_B,
-                "num_product": num_product_B
-            }
+        self.num_product_dict = {
+            "A": num_product_A,
+            "B": num_product_B
         }
 
         # setup product array
         self.current_unprocessed_product_arr = []
-        for i in range(self.product_dict["A"]["num_product"]):
+        for i in range(self.num_product_dict["A"]):
             self.current_unprocessed_product_arr.append("A")
-        for i in range(self.product_dict["B"]["num_product"]):
+        for i in range(self.num_product_dict["B"]):
             self.current_unprocessed_product_arr.append("B")
         random.shuffle(self.current_unprocessed_product_arr)
 
@@ -67,7 +59,9 @@ class Manufacture_Model(Model):
             spot_agent = Spot_Agent(
                 unique_id,
                 self,
-                spot_pos)
+                spot_pos,
+                product_processing_duration_dict_conf[key]["A"],
+                product_processing_duration_dict_conf[key]["B"])
             self.grid.place_agent(spot_agent, spot_agent.coordinate)
 
             product_agent = Product_Agent(
@@ -100,8 +94,6 @@ class Manufacture_Model(Model):
             person_agent = Person_Agent(
                 "A"+str(i),
                 self,
-                self.get_current_processing_product(),
-                self.get_current_processing_product_step(),
                 movement_radius)
             self.grid.place_agent(person_agent, random_coordinates[i])
             self.schedule.add(person_agent)
@@ -143,12 +135,6 @@ class Manufacture_Model(Model):
         if (self.check_if_running() == True):
             return self.current_unprocessed_product_arr[0]
         return None
-
-    def get_current_processing_product_step(self):
-        current_processing_product_step = self.get_current_processing_product()
-        if (current_processing_product_step is None):
-            return None
-        return self.product_dict[current_processing_product_step]["each_step_duration"]
 
     def update_num_finished_product(self):
         self.current_unprocessed_product_arr.pop(0)

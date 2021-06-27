@@ -89,30 +89,12 @@ number_of_products_A_slider = UserSettableParameter(
     1
 )
 
-num_step_to_finish_product_A_slider = UserSettableParameter(
-    "slider",
-    "Number of seconds to finish product A",
-    1,
-    1,
-    5,
-    1
-)
-
 number_of_products_B_slider = UserSettableParameter(
     "slider",
     "Number of Product B",
     1,
     0,
     20,
-    1
-)
-
-num_step_to_finish_product_B_slider = UserSettableParameter(
-    "slider",
-    "Number of seconds to finish product B",
-    1,
-    1,
-    5,
     1
 )
 
@@ -154,9 +136,7 @@ server = ModularServer(
         "height": 10,
         "num_person_agent": number_of_agents_slider,
         "num_product_A": number_of_products_A_slider,
-        "each_step_duration_A": num_step_to_finish_product_A_slider,
         "num_product_B": number_of_products_B_slider,
-        "each_step_duration_B": num_step_to_finish_product_B_slider,
         "num_max_waiting_products": num_max_waiting_products_slider,
         "num_agv": num_agv_slider,
         "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,

@@ -35,11 +35,7 @@ class Agv_Agent(Agent):
         self.setup_coordinations()
 
     def setup_kanban_pos_dict(self):
-        self.kanban_pos_dict = {}
-        kanban_pos_dict = left_kanban_pos_dict_conf if self.type == Agv_Type.Left else right_kanban_pos_dict_conf
-        for key,kanban_pos in kanban_pos_dict.items():
-            if key in spot_pos_dict_conf:
-                self.kanban_pos_dict[key] = kanban_pos
+        self.kanban_pos_dict = left_kanban_pos_dict_conf if self.type == Agv_Type.Left else right_kanban_pos_dict_conf
 
     def setup_coordinations(self):
         if (self.type == Agv_Type.Left):
