@@ -34,25 +34,25 @@ class Report():
         worksheet.set_column(first_col, last_col, col_width)
         return worksheet
 
-    def write_header(self, row, col, content, worksheet: Worksheet):
-        header_format = self.workbook.add_format({'border': 1, 'bold': True, 'align': 'center'})
-        worksheet.write(row, col, content, header_format)
+    def write_col_header(self, row, col, content, worksheet: Worksheet):
+        col_header_format = self.workbook.add_format({'border': 1, 'bold': True, 'align': 'center'})
+        worksheet.write(row, col, content, col_header_format)
 
-    def write_cell(self, row, col, content, worksheet: Worksheet, align_right = True, bold = False):
+    def write_row_header(self, row, col, content, worksheet: Worksheet):
+        row_header_format = self.workbook.add_format({'border': 1, 'bold': True })
+        worksheet.write(row, col, content, row_header_format)
+
+    def write_cell(self, row, col, content, worksheet: Worksheet):
         cell_format = self.workbook.add_format({'border': 1})
-        if (align_right == True):
-            cell_format.set_align('right')
-        if (bold == True):
-            cell_format.set_bold(True)
         worksheet.write(row, col, content, cell_format)
 
     def export_summary_sheet(self, sheet_name):
         worksheet = self.prepare_worksheet(sheet_name, 0, 3, 50)
 
         # Write data headers.
-        self.write_header(0, 1, 'Total processing time at all stations (seconds)', worksheet)
-        self.write_header(0, 2, 'Total waiting time (seconds)', worksheet)
-        self.write_header(0, 3, 'Total moving time (seconds)' , worksheet)
+        self.write_col_header(0, 1, 'Total processing time at all stations (seconds)', worksheet)
+        self.write_col_header(0, 2, 'Total waiting time (seconds)', worksheet)
+        self.write_col_header(0, 3, 'Total moving time (seconds)' , worksheet)
 
         # Start from the first cell below the headers.
         row = 1
@@ -60,14 +60,14 @@ class Report():
 
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
-            self.write_cell(row, col    , 'Worker ' + person_agent.name        , worksheet, False, True)
+            self.write_row_header(row, col    , 'Worker ' + person_agent.name  , worksheet)
             self.write_cell(row, col + 1, person_agent.total_working_step_count, worksheet)
             self.write_cell(row, col + 2, person_agent.total_waiting_step_count, worksheet)
             self.write_cell(row, col + 3, person_agent.total_moving_step_count , worksheet)
             row += 1
 
         for agv_name, agv_agent_statistics in self.agv_agent_statistics_collection_dict.items():
-            self.write_cell(row, col    , 'AGV ' + agv_name, worksheet, False, True)
+            self.write_row_header(row, col    , 'AGV ' + agv_name, worksheet)
             self.write_cell(row, col + 1, 'N/A'            , worksheet)
             self.write_cell(
                 row, 
@@ -92,7 +92,7 @@ class Report():
 
         # Write data headers.
         for spot_id in spot_id_list:
-            self.write_header(row, col, 'Station ' + spot_id, worksheet)
+            self.write_col_header(row, col, 'Station ' + spot_id, worksheet)
             col += 1
 
         row = 1
@@ -101,7 +101,7 @@ class Report():
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
             internal_col = col
-            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet, False, True)
+            self.write_row_header(row, internal_col    , 'Worker ' + person_agent.name, worksheet)
             internal_col += 1
             for spot_id, working_step_count in person_agent.working_step_count_dict.items():
                 self.write_cell(row, internal_col, working_step_count, worksheet)
@@ -117,7 +117,7 @@ class Report():
 
         # Write data headers.
         for spot_id in spot_id_list:
-            self.write_header(row, col, 'Station ' + spot_id, worksheet)
+            self.write_col_header(row, col, 'Station ' + spot_id, worksheet)
             col += 1
 
         row = 1
@@ -126,7 +126,7 @@ class Report():
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
             internal_col = col
-            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet, False, True)
+            self.write_row_header(row, internal_col    , 'Worker ' + person_agent.name, worksheet)
             internal_col += 1
             for spot_id, waiting_step_count in person_agent.waiting_step_count_dict.items():
                 self.write_cell(row, internal_col, waiting_step_count, worksheet)
