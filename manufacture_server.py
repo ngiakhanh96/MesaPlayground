@@ -70,17 +70,17 @@ total_waiting_step_graph = BarChartModule(
     data_collector_name='data_collector'
 )
 
-agv_0_total_waiting_step_graph = BarChartModule(
-    [{"Label": "Agv_0_Total_Waiting_Seconds", "Color": "Red"}],
-    scope="model",
-    data_collector_name='data_collector'
-)
+# agv_0_total_waiting_step_graph = BarChartModule(
+#     [{"Label": "Agv_0_Total_Waiting_Seconds", "Color": "Red"}],
+#     scope="model",
+#     data_collector_name='data_collector'
+# )
 
-agv_1_total_waiting_step_graph = BarChartModule(
-    [{"Label": "Agv_1_Total_Waiting_Seconds", "Color": "Red"}],
-    scope="model",
-    data_collector_name='data_collector'
-)
+# agv_1_total_waiting_step_graph = BarChartModule(
+#     [{"Label": "Agv_1_Total_Waiting_Seconds", "Color": "Red"}],
+#     scope="model",
+#     data_collector_name='data_collector'
+# )
 
 number_of_agents_slider = UserSettableParameter(
     "slider",
@@ -148,8 +148,8 @@ num_agv_loading_step_choice = UserSettableParameter(
 
 server = ModularServer(
     Manufacture_Model,
-    [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph, agv_0_total_waiting_step_graph, agv_1_total_waiting_step_graph],
-    # [grid, agv_0_total_waiting_step_graph, agv_1_total_waiting_step_graph],
+    [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph],
+    # [grid, total_moving_step_graph, total_working_step_graph, total_waiting_step_graph, agv_0_total_waiting_step_graph, agv_1_total_waiting_step_graph],
     "Manufacture Model",
     {
         "width": 10,
@@ -161,7 +161,6 @@ server = ModularServer(
         "num_agv": num_agv_slider,
         "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,
         "movement_radius": agent_movement_radius_choice,
-        "num_max_kanban": 3,
         "num_agv_loading_step": num_agv_loading_step_choice
     }
 )

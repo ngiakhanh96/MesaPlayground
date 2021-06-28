@@ -15,20 +15,26 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, name, model, home_coordinate, loading_step, type):
+    def __init__(self, unique_id, name, model, home_coordinate, loading_step_duration, type):
         super().__init__(unique_id, model)
         self.name = name
         self.home_coordinate = home_coordinate
-        self.loading_step = loading_step
+        self.loading_step_duration = loading_step_duration
         self.type = type
+        self.filling_step_duration = 1
         self.current_loading_step = 0
+        self.current_filling_step = 0
         
         self.filling_pos = None
         self.kanban_pos = None
         self.status = Status.Free
         self.become_free = False
         self.distance_from_home_to_cornerX = 3
+
+        self.moving_step_count = 0
         self.waiting_step_count = 0
+        self.filling_step_count = 0
+        self.loading_step_count = 0
 
         self.setup()
 
@@ -57,23 +63,33 @@ class Agv_Agent(Agent):
         if (self.become_free == True):
             self.status = Status.Free
             self.become_free = False
+        elif (self.status == Status.Free):
+            self.waiting_step_count += 1
 
     def fulfill_duty(self):
         if (self.status == Status.Free):
             return False
         if (self.status == Status.Loading):
-            if (self.current_loading_step >= self.loading_step - 1):
+            if (self.current_loading_step >= self.loading_step_duration - 1):
                 self.status = Status.GoingTo
                 self.current_loading_step = 0
             else:
                 self.current_loading_step += 1
+            self.loading_step_count += 1
         elif (self.status == Status.GoingTo):
             self.goTo()
+            self.moving_step_count += 1
         elif (self.status == Status.Filling):
-            self.filling_kanban()
-            self.status = Status.Comeback
+            if (self.current_filling_step >= self.filling_step_duration - 1):
+                self.filling_kanban()
+                self.status = Status.Comeback
+                self.current_filling_step = 0
+            else:
+                self.current_filling_step += 1
+            self.filling_step_count += 1
         elif (self.status == Status.Comeback):
             self.comeback()
+            self.moving_step_count += 1
         return True
 
     def goTo(self):
@@ -85,8 +101,7 @@ class Agv_Agent(Agent):
             self.comeback_horizontally()
 
     def filling_kanban(self):
-        kanban_agent = self.model.grid.get_cell_list_contents(
-            [self.kanban_pos])[0]
+        kanban_agent = self.model.grid.get_cell_list_contents([self.kanban_pos])[0]
         kanban_agent.refill()
 
     def comeback_vertically(self):
