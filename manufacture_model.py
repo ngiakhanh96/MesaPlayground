@@ -57,7 +57,7 @@ class Manufacture_Model(Model):
         self.kanban_agent_dict = {}
         for key,spot_pos in spot_pos_dict_conf.items():
             spot_agent = Spot_Agent(
-                "S"+key,
+                "S" + key,
                 key,
                 self,
                 spot_pos,
@@ -66,7 +66,7 @@ class Manufacture_Model(Model):
             self.grid.place_agent(spot_agent, spot_agent.coordinate)
 
             product_agent = Product_Agent(
-                "P"+key,
+                "P" + key,
                 key,
                 self,
                 0,
@@ -78,7 +78,7 @@ class Manufacture_Model(Model):
 
             kanban_pos = get_kanban_pos_from_dict(key)
             kanban_agent = Kanban_Agent(
-                "K"+key,
+                "K" + key,
                 key,
                 self,
                 kanban_pos,
@@ -91,12 +91,11 @@ class Manufacture_Model(Model):
         # setup Person_Agent
         self.num_person_agent = num_person_agent
         default_coordinates = get_spot_pos_list
-        random_coordinates = random.sample(
-            default_coordinates, self.num_person_agent)
+        random_coordinates = random.sample(default_coordinates, self.num_person_agent)
         for i in range(self.num_person_agent):
             person_agent = Person_Agent(
-                "A"+str(i+1),
-                str(i+1),
+                "A" + str(i),
+                str(i),
                 self,
                 movement_radius)
             self.grid.place_agent(person_agent, random_coordinates[i])

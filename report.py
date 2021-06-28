@@ -9,7 +9,7 @@ class Report():
         self.person_agent_list = person_agent_list
         self.export_dir = 'reports'
         self.export_file_name = 'report.xlsx'
-        self.path_to_file = self.export_dir + '/' + self.export_file_name
+        self.path_to_file = os.path.join(self.export_dir, self.export_file_name)
 
     def export(self):
         self.prepare_path_and_file()
@@ -38,8 +38,12 @@ class Report():
         header_format = self.workbook.add_format({'border': 1, 'bold': True, 'align': 'center'})
         worksheet.write(row, col, content, header_format)
 
-    def write_cell(self, row, col, content, worksheet: Worksheet):
-        cell_format = self.workbook.add_format({'border': 1, 'align': 'right'})
+    def write_cell(self, row, col, content, worksheet: Worksheet, align_right = True, bold = False):
+        cell_format = self.workbook.add_format({'border': 1})
+        if (align_right == True):
+            cell_format.set_align('right')
+        if (bold == True):
+            cell_format.set_bold(True)
         worksheet.write(row, col, content, cell_format)
 
     def export_summary_sheet(self, sheet_name):
@@ -56,14 +60,14 @@ class Report():
 
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
-            self.write_cell(row, col    , 'Worker ' + person_agent.name        , worksheet)
+            self.write_cell(row, col    , 'Worker ' + person_agent.name        , worksheet, False, True)
             self.write_cell(row, col + 1, person_agent.total_working_step_count, worksheet)
             self.write_cell(row, col + 2, person_agent.total_waiting_step_count, worksheet)
             self.write_cell(row, col + 3, person_agent.total_moving_step_count , worksheet)
             row += 1
 
         for agv_name, agv_agent_statistics in self.agv_agent_statistics_collection_dict.items():
-            self.write_cell(row, col    , 'AGV ' + agv_name, worksheet)
+            self.write_cell(row, col    , 'AGV ' + agv_name, worksheet, False, True)
             self.write_cell(row, col + 1, 'N/A'            , worksheet)
             self.write_cell(
                 row, 
@@ -97,7 +101,7 @@ class Report():
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
             internal_col = col
-            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet)
+            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet, False, True)
             internal_col += 1
             for spot_id, working_step_count in person_agent.working_step_count_dict.items():
                 self.write_cell(row, internal_col, working_step_count, worksheet)
@@ -122,7 +126,7 @@ class Report():
         # Iterate over the person_agent_list and write it out row by row.
         for person_agent in self.person_agent_list:
             internal_col = col
-            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet)
+            self.write_cell(row, internal_col    , 'Worker ' + person_agent.name        , worksheet, False, True)
             internal_col += 1
             for spot_id, waiting_step_count in person_agent.waiting_step_count_dict.items():
                 self.write_cell(row, internal_col, waiting_step_count, worksheet)
