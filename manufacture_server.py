@@ -103,19 +103,19 @@ num_max_waiting_products_slider = UserSettableParameter(
 number_of_products_A_slider = UserSettableParameter(
     "slider",
     "Number of Product A",
-    1,
+    50,
     0,
-    20,
-    1
+    500,
+    50
 )
 
 number_of_products_B_slider = UserSettableParameter(
     "slider",
     "Number of Product B",
-    1,
+    50,
     0,
-    20,
-    1
+    500,
+    50
 )
 
 num_agv_slider = UserSettableParameter(

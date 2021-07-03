@@ -1,3 +1,4 @@
+import datetime
 import xlsxwriter
 import os
 
@@ -8,7 +9,8 @@ class Report():
         self.agv_agent_statistics_collection_dict = agv_agent_statistics_collection_dict
         self.person_agent_list = person_agent_list
         self.export_dir = 'reports'
-        self.export_file_name = 'report.xlsx'
+        self.exported_date_str = datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.export_file_name = 'report'+ self.exported_date_str + '.xlsx'
         self.path_to_file = os.path.join(self.export_dir, self.export_file_name)
 
     def export(self):
