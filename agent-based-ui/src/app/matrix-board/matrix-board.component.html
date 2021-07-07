@@ -1,0 +1,15 @@
+<div class="matrix-board">
+  <ng-container *ngFor="let cellHeight of height; let y = index">
+    <div
+      class="cell"
+      *ngFor="let cell of width; let x = index"
+      [style.height]="'10%'"
+      [style.width]="'10%'"
+      (mousedown)="onMouseDown({x, y})"
+      (mouseup)="onMouseUp({x, y})"
+      [class.selected]="isSelectedCell({x, y})"
+    >
+      {{ x + ", " + y }}
+    </div>
+  </ng-container>
+</div>

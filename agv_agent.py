@@ -29,7 +29,7 @@ class Agv_Agent(Agent):
         self.kanban_pos = None
         self.status = Status.Free
         self.become_free = False
-        self.distance_from_home_to_cornerX = 3
+        self.distance_from_home_to_cornerX = None
 
         self.moving_step_count = 0
         self.waiting_step_count = 0
@@ -46,7 +46,8 @@ class Agv_Agent(Agent):
         self.kanban_pos_dict = left_kanban_pos_dict_conf if self.type == Agv_Type.Left else right_kanban_pos_dict_conf
 
     def setup_coordinations(self):
-        if (self.type == Agv_Type.Left):
+        self.distance_from_home_to_cornerX = min(abs(self.home_coordinate[0] - left_x_pos_spot_column), abs(self.home_coordinate[0] - right_x_pos_spot_column)) + 2
+        if (self.type == Agv_Type.Left):   
             self.cornerX = self.home_coordinate[0] - \
                 self.distance_from_home_to_cornerX
         else:
