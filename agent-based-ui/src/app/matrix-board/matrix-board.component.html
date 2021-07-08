@@ -1,17 +1,15 @@
 <div class="matrix-board" (window:resize)="onResizeCanvas()" #mainContainer>
   <canvas #canvas></canvas>
-  <ng-container *ngFor="let cellHeight of height; let y = index">
+  <ng-container *ngFor="let ch of height; let y = index">
     <div
       class="cell"
-      *ngFor="let cell of width; let x = index"
+      *ngFor="let cw of width; let x = index"
       [style.height.%]="height.length"
       [style.width.%]="width.length"
       [class.selected]="
         isSelectedCell({
-          x: (mainContainer.offsetWidth / width.length) * x,
-          y:
-            (mainContainer.offsetHeight / height.length) *
-            (height.length - 1 - y)
+          x: cellWidth * x,
+          y: cellHeight * (height.length - 1 - y)
         })
       "
     >

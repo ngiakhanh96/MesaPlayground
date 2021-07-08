@@ -20,6 +20,8 @@ export interface Position {
 export class MatrixBoardComponent implements OnInit, AfterViewInit {
   width: number[] = [].constructor(10);
   height: number[] = [].constructor(10);
+  cellWidth: number = 0;
+  cellHeight: number = 0;
   selectedAreaStartPosition: Position | null = null;
   selectedAreaEndPosition: Position | null = null;
 
@@ -37,6 +39,10 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.canvasCtx = this.canvasArea.nativeElement.getContext('2d')!;
+    this.cellWidth =
+      this.mainContainer.nativeElement.offsetWidth / this.width.length;
+    this.cellHeight =
+      this.mainContainer.nativeElement.offsetHeight / this.height.length;
     this.onResizeCanvas();
   }
 
@@ -50,10 +56,9 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   @HostListener('mousedown', ['$event'])
   onHostMouseDown(event: MouseEvent): void {
-    var rect = this.canvasArea.nativeElement.getBoundingClientRect();
     this.selectedAreaStartPosition = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: event.offsetX,
+      y: event.offsetY,
     };
     this.selectedAreaEndPosition = null;
     this.isMouseDown = true;
@@ -65,10 +70,9 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     if (this.isMouseDown == false || this.selectedAreaStartPosition == null) {
       return;
     }
-    var rect = this.canvasArea.nativeElement.getBoundingClientRect();
     this.selectedAreaEndPosition = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      x: event.offsetX,
+      y: event.offsetY,
     };
     this.updateMinMaxXY();
 
@@ -85,9 +89,11 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     }
     const [minX, maxX, minY, maxY] = [...this.minMaxXYs];
     if (
-      ((position.x + 50 <= maxX && position.x + 50 >= minX) ||
+      ((position.x + this.cellWidth <= maxX &&
+        position.x + this.cellWidth >= minX) ||
         (position.x <= maxX && position.x >= minX)) &&
-      ((position.y + 50 <= maxY && position.y + 50 >= minY) ||
+      ((position.y + this.cellHeight <= maxY &&
+        position.y + this.cellHeight >= minY) ||
         (position.y <= maxY && position.y >= minY))
     ) {
       return true;
