@@ -1,15 +1,28 @@
+import { KeyValue } from '@angular/common';
 import {
   AfterViewInit,
   Component,
   ElementRef,
-  HostListener,
   OnInit,
   ViewChild,
 } from '@angular/core';
+import {
+  FormArray,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { AgentType } from '../enums/AgentType.enum';
+import { Utils } from '../utils/utils';
 
 export interface Position {
   x: number;
   y: number;
+}
+export interface Cell {
+  isSelecting: boolean;
+  responsible: AgentType;
 }
 
 @Component({
@@ -35,9 +48,23 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   minMaxXYs: number[] = [];
 
-  constructor() {}
+  cellDict: Dictionary<Cell> = {};
+
+  AgentType: typeof AgentType = AgentType;
+
+  form = this.fb.group({
+    agvLoadingTime: ['1', Validators.min(1)],
+    agvFillingTime: ['1', Validators.min(1)],
+    processingTimes: this.fb.group({}),
+  });
+
+  constructor(private fb: FormBuilder) {}
 
   ngAfterViewInit(): void {
+    this.onResizeCanvas();
+  }
+
+  ngOnInit(): void {
     this.canvasCtx = this.canvasArea.nativeElement.getContext('2d')!;
     this.cellWidth =
       this.mainContainer.nativeElement.offsetWidth / this.width.length;
@@ -46,33 +73,46 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.onResizeCanvas();
   }
 
-  ngOnInit(): void {}
+  onSubmit() {
+    if (this.form.invalid) {
+      // stop here if it's invalid
+      alert('Invalid input');
+      return;
+    }
+    console.log(this.form.getRawValue());
+  }
 
-  @HostListener('mouseup', ['$event'])
-  onHostMouseUp(event: MouseEvent): void {
+  onMouseUp(event: Event): void {
+    if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
+      return;
+    }
+    this.selectedAreaEndPosition = {
+      x: (<MouseEvent>event).offsetX,
+      y: (<MouseEvent>event).offsetY,
+    };
+    this.updateMinMaxXY();
     this.resetCanvas();
     this.isMouseDown = false;
   }
 
-  @HostListener('mousedown', ['$event'])
-  onHostMouseDown(event: MouseEvent): void {
+  onMouseDown(event: Event): void {
+    event = event as MouseEvent;
     this.selectedAreaStartPosition = {
-      x: event.offsetX,
-      y: event.offsetY,
+      x: (<MouseEvent>event).offsetX,
+      y: (<MouseEvent>event).offsetY,
     };
     this.selectedAreaEndPosition = null;
     this.isMouseDown = true;
     this.updateMinMaxXY();
   }
 
-  @HostListener('mousemove', ['$event'])
-  onHostMouseMove(event: MouseEvent): void {
-    if (this.isMouseDown == false || this.selectedAreaStartPosition == null) {
+  onMouseMove(event: Event): void {
+    if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
       return;
     }
     this.selectedAreaEndPosition = {
-      x: event.offsetX,
-      y: event.offsetY,
+      x: (<MouseEvent>event).offsetX,
+      y: (<MouseEvent>event).offsetY,
     };
     this.updateMinMaxXY();
 
@@ -83,6 +123,66 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.canvasCtx!.stroke();
   }
 
+  getCellClass(position: Position, cellKey: string): string {
+    const isSelectedCell = this.isSelectedCell(position);
+    if (this.cellDict[cellKey] == null) {
+      this.cellDict[cellKey] = {
+        isSelecting: false,
+        responsible: AgentType.Unknown,
+      } as Cell;
+    }
+    this.cellDict[cellKey].isSelecting = isSelectedCell;
+    if (isSelectedCell) {
+      return 'cell--selected';
+    }
+    switch (this.cellDict[cellKey].responsible) {
+      case AgentType.SpotAgent:
+        return 'cell--spot-agent';
+      case AgentType.WorkerMovingArea:
+        return 'cell--worker-moving-area';
+      case AgentType.AgvStationAgent:
+        return 'cell--agv-station-agent';
+      case AgentType.PersonAgent:
+        return 'cell--person-agent';
+      case AgentType.AgvMovingArea:
+        return 'cell--agv-moving-area';
+      default:
+        return 'cell--unknown';
+    }
+  }
+
+  get processingTimeFormGroup() {
+    return this.form.get('processingTimes') as FormGroup;
+  }
+
+  trackByFn(index: number, cellFormControlObj: any) {
+    return cellFormControlObj.key;
+  }
+
+  onMake(agentType: AgentType) {
+    Object.values(this.cellDict)
+      .filter((cell) => cell.isSelecting)
+      .forEach((cell) => (cell.responsible = agentType));
+    if (agentType === AgentType.SpotAgent) {
+      const oldValues = this.processingTimeFormGroup.value;
+      const spotCellKeys = Object.keys(this.cellDict).filter(
+        (cellKey) => this.cellDict[cellKey].responsible === AgentType.SpotAgent
+      );
+
+      const spotCellFormControlDict: Dictionary<FormControl> = {};
+      spotCellKeys.forEach(
+        (cellKey) =>
+          (spotCellFormControlDict[cellKey] = this.fb.control(
+            '1',
+            Validators.required
+          ))
+      );
+      const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
+      spotCellFormGroup.patchValue(oldValues);
+      this.form.setControl('processingTimes', spotCellFormGroup);
+    }
+  }
+
   isSelectedCell(position: Position) {
     if (this.minMaxXYs.length === 0) {
       return false;
@@ -91,10 +191,12 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     if (
       ((position.x + this.cellWidth <= maxX &&
         position.x + this.cellWidth >= minX) ||
-        (position.x <= maxX && position.x >= minX)) &&
+        (position.x <= maxX && position.x >= minX) ||
+        (position.x < minX && position.x + this.cellWidth > maxX)) &&
       ((position.y + this.cellHeight <= maxY &&
         position.y + this.cellHeight >= minY) ||
-        (position.y <= maxY && position.y >= minY))
+        (position.y <= maxY && position.y >= minY) ||
+        (position.y < minY && position.y + this.cellHeight > maxY))
     ) {
       return true;
     }

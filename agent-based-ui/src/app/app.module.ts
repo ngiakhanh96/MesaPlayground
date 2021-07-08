@@ -1,18 +1,14 @@
 import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppComponent } from './app.component';
 import { MatrixBoardComponent } from './matrix-board/matrix-board.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    MatrixBoardComponent
-  ],
-  imports: [
-    BrowserModule
-  ],
+  declarations: [AppComponent, MatrixBoardComponent],
+  imports: [BrowserModule, ReactiveFormsModule],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

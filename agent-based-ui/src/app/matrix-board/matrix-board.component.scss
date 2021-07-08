@@ -1,3 +1,11 @@
+$unknown-color: yellow;
+$selected-color: green;
+$spot-agent-color: gray;
+$agv-station-agent-color: pink;
+$worker-moving-area-color: orange;
+$person-agent-color: red;
+$agv-moving-area-color: purple;
+
 canvas {
   width: 100%;
   height: 100%;
@@ -8,23 +16,86 @@ canvas {
 .matrix-board {
   display: flex;
   flex-wrap: wrap-reverse;
-  height: 100%;
+  height: 500px;
+  width: 650px;
   position: relative;
 }
 
+.makeBtn {
+  border-width: 1px;
+  &--unknown {
+    @extend .makeBtn;
+    background-color: $unknown-color;
+  }
+
+  &--selected {
+    @extend .makeBtn;
+    background-color: $selected-color;
+  }
+
+  &--spot-agent {
+    @extend .makeBtn;
+    background-color: $spot-agent-color;
+  }
+
+  &--agv-station-agent {
+    @extend .makeBtn;
+    background-color: $agv-station-agent-color;
+  }
+
+  &--worker-moving-area {
+    @extend .makeBtn;
+    background-color: $worker-moving-area-color;
+  }
+
+  &--person-agent {
+    @extend .makeBtn;
+    background-color: $person-agent-color;
+  }
+}
+
 .cell {
-  background-color: yellow;
   text-align: center;
   display: flex;
   justify-content: center;
   align-content: center;
   flex-direction: column;
-  border: solid black 1px;
+  border: 1px solid black;
   user-select: none;
-}
+  &--unknown {
+    @extend .cell;
+    background-color: $unknown-color;
+  }
 
-.selected {
-  background-color: green;
+  &--selected {
+    @extend .cell;
+    background-color: $selected-color;
+  }
+
+  &--spot-agent {
+    @extend .cell;
+    background-color: $spot-agent-color;
+  }
+
+  &--agv-station-agent {
+    @extend .cell;
+    background-color: $agv-station-agent-color;
+  }
+
+  &--worker-moving-area {
+    @extend .cell;
+    background-color: $worker-moving-area-color;
+  }
+
+  &--person-agent {
+    @extend .cell;
+    background-color: $person-agent-color;
+  }
+
+  &--agv-moving-area {
+    @extend .cell;
+    background-color: $agv-moving-area-color;
+  }
 }
 
 :host {
