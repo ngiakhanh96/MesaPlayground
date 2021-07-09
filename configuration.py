@@ -1,4 +1,3 @@
-import numpy
 left_x_pos_spot_column = 3
 right_x_pos_spot_column = 6
 
@@ -9,3 +8,6 @@ product_processing_duration_dict_input_conf = {"1": {"A": [1], "B": [1]}, "2": {
                                                "4": {"A": [1], "B": [1]}, "5": {"A": [1], "B": [1]}, "6": {"A": [1], "B": [1]}}
 
 agv_station_pos_dict_conf = {"1": (4, 7), "2": (5, 7)}
+
+num_agv_loading_step_conf = 1
+num_agv_filling_step_conf = 1

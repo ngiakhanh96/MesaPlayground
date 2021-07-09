@@ -29,8 +29,7 @@ class Manufacture_Model(Model):
             num_max_waiting_products,
             num_agv,
             num_min_kanban_to_refill,
-            movement_radius,
-            num_agv_loading_step):
+            movement_radius):
         super().__init__()
 
         # setup Grid and Schedule
@@ -121,7 +120,8 @@ class Manufacture_Model(Model):
                 i,
                 self,
                 agv_station_pos,
-                num_agv_loading_step,
+                num_agv_loading_step_conf,
+                num_agv_filling_step_conf,
                 Agv_Type.Left if i == list(agv_station_pos_dict_conf.keys())[0] else Agv_Type.Right
             )
             self.grid.place_agent(agv_agent, agv_agent.home_coordinate)

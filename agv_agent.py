@@ -15,13 +15,13 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, name, model, home_coordinate, loading_step_duration, type):
+    def __init__(self, unique_id, name, model, home_coordinate, loading_step_duration, filling_step_duration, type):
         super().__init__(unique_id, model)
         self.name = name
         self.home_coordinate = home_coordinate
         self.loading_step_duration = loading_step_duration
         self.type = type
-        self.filling_step_duration = 1
+        self.filling_step_duration = filling_step_duration
         self.current_loading_step = 0
         self.current_filling_step = 0
         

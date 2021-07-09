@@ -16,7 +16,7 @@
             x: cellWidth * x,
             y: cellHeight * (height.length - 1 - y)
           },
-          x + ',' + y
+          x + ', ' + y
         )
       "
       [style.height.%]="100 / height.length"
@@ -69,17 +69,31 @@
     <h2>Station Processing Times</h2>
     <div
       *ngFor="
-        let control of processingTimeFormGroup.controls | keyvalue;
+        let control of processingTimesFormGroup.controls
+          | keyvalue: keyValueSortFn;
         let i = index;
         trackBy: trackByFn
       "
     >
-      <!-- The repeated alias template -->
-      <label for="control-{{ i }}">{{
-        "Processing Time of station " + control.key + ": "
-      }}</label>
-      <input id="control-{{ i }}" type="text" [formControlName]="control.key" />
+      <div [formGroupName]="control.key">
+        <label for="control-{{ i }}-processingTime">{{
+          "Processing Time of station " + control.key + ": "
+        }}</label>
+        <input
+          id="control-{{ i }}-processingTime"
+          type="text"
+          formControlName="processingTime"
+        />
+        <label for="control-{{ i }}-order">{{
+          "Order of station " + control.key + ": "
+        }}</label>
+        <input
+          id="control-{{ i }}-order"
+          type="number"
+          formControlName="order"
+        />
+      </div>
     </div>
   </div>
-  <button type="submit">OK</button>
+  <button type="submit">Save</button>
 </form>

@@ -7,14 +7,12 @@ import {
   ViewChild,
 } from '@angular/core';
 import {
-  FormArray,
+  AbstractControl,
   FormBuilder,
-  FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
 import { AgentType } from '../enums/AgentType.enum';
-import { Utils } from '../utils/utils';
 
 export interface Position {
   x: number;
@@ -23,6 +21,8 @@ export interface Position {
 export interface Cell {
   isSelecting: boolean;
   responsible: AgentType;
+  order: number | null;
+  modifiedDate: number;
 }
 
 @Component({
@@ -75,11 +75,73 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      // stop here if it's invalid
       alert('Invalid input');
       return;
     }
     console.log(this.form.getRawValue());
+    const formSettings = this.form.getRawValue();
+    let exportDataString = '';
+
+    exportDataString += `num_agv_loading_step_conf = ${formSettings.agvLoadingTime}\n`;
+    exportDataString += `num_agv_filling_step_conf = ${formSettings.agvFillingTime}\n`;
+
+    const agvStationKeys = Object.keys(this.cellDict).filter(
+      (key) => this.cellDict[key].responsible === AgentType.AgvStationAgent
+    );
+    exportDataString += 'agv_station_pos_dict_conf = {';
+    for (let index = 1; index < agvStationKeys.length + 1; index++) {
+      exportDataString += `"${index}": (${agvStationKeys[index - 1]})`;
+      if (index < agvStationKeys.length) {
+        exportDataString += ', ';
+      }
+    }
+    exportDataString += '} \n';
+
+    const spotAgentKeys = Object.keys(this.cellDict)
+      .filter((key) => this.cellDict[key].responsible === AgentType.SpotAgent)
+      .sort(
+        (a, b) =>
+          formSettings.processingTimes[a].order -
+          formSettings.processingTimes[b].order
+      );
+    const xPosList = spotAgentKeys.map((key) => +key.split(', ')[0]);
+    const minX = Math.min(...xPosList);
+    const maxX = Math.max(...xPosList);
+    exportDataString += `left_x_pos_spot_column = ${minX}\n`;
+    exportDataString += `right_x_pos_spot_column = ${maxX}\n`;
+
+    exportDataString += 'spot_pos_dict_conf = {';
+    for (let index = 1; index < spotAgentKeys.length + 1; index++) {
+      const spotAgentPosition = spotAgentKeys[index - 1];
+      exportDataString += `"${formSettings.processingTimes[spotAgentPosition].order}": (${spotAgentPosition})`;
+      if (index < spotAgentKeys.length) {
+        exportDataString += ', ';
+      }
+    }
+    exportDataString += '} \n';
+
+    exportDataString += 'product_processing_duration_dict_input_conf = {';
+    for (let index = 1; index < spotAgentKeys.length + 1; index++) {
+      const spotAgentPosition = spotAgentKeys[index - 1];
+      exportDataString += `"${formSettings.processingTimes[spotAgentPosition].order}": {"A": [${formSettings.processingTimes[spotAgentPosition].processingTime}]}`;
+      if (index < spotAgentKeys.length) {
+        exportDataString += ', ';
+      }
+    }
+    exportDataString += '} \n';
+    console.log(exportDataString);
+
+    // var file = new Blob([JSON.stringify(this.form.getRawValue())]);
+    // var a = document.createElement('a'),
+    //   url = URL.createObjectURL(file);
+    // a.href = url;
+    // a.download = 'configuration.py';
+    // document.body.appendChild(a);
+    // a.click();
+    // setTimeout(function () {
+    //   document.body.removeChild(a);
+    //   window.URL.revokeObjectURL(url);
+    // }, 0);
   }
 
   onMouseUp(event: Event): void {
@@ -129,6 +191,8 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
       this.cellDict[cellKey] = {
         isSelecting: false,
         responsible: AgentType.Unknown,
+        order: null,
+        modifiedDate: Date.now(),
       } as Cell;
     }
     this.cellDict[cellKey].isSelecting = isSelectedCell;
@@ -151,36 +215,58 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  get processingTimeFormGroup() {
+  get processingTimesFormGroup() {
     return this.form.get('processingTimes') as FormGroup;
   }
 
-  trackByFn(index: number, cellFormControlObj: any) {
+  trackByFn(
+    index: number,
+    cellFormControlObj: KeyValue<string, AbstractControl>
+  ) {
     return cellFormControlObj.key;
   }
 
+  keyValueSortFn(
+    a: KeyValue<string, AbstractControl>,
+    b: KeyValue<string, AbstractControl>
+  ) {
+    return 0;
+  }
+
   onMake(agentType: AgentType) {
-    Object.values(this.cellDict)
-      .filter((cell) => cell.isSelecting)
-      .forEach((cell) => (cell.responsible = agentType));
-    if (agentType === AgentType.SpotAgent) {
-      const oldValues = this.processingTimeFormGroup.value;
-      const spotCellKeys = Object.keys(this.cellDict).filter(
+    Object.keys(this.cellDict)
+      .filter((key) => this.cellDict[key].isSelecting)
+      .forEach((key) => {
+        const cell = this.cellDict[key];
+        cell.responsible = agentType;
+        if (agentType === AgentType.SpotAgent) {
+          cell.order = 1;
+        } else {
+          cell.order = null;
+        }
+        cell.modifiedDate = Date.now();
+      });
+    const oldValues = this.processingTimesFormGroup.value;
+    const spotCellKeys = Object.keys(this.cellDict)
+      .filter(
         (cellKey) => this.cellDict[cellKey].responsible === AgentType.SpotAgent
+      )
+      .sort(
+        (a, b) => this.cellDict[a].modifiedDate - this.cellDict[b].modifiedDate
       );
 
-      const spotCellFormControlDict: Dictionary<FormControl> = {};
-      spotCellKeys.forEach(
-        (cellKey) =>
-          (spotCellFormControlDict[cellKey] = this.fb.control(
-            '1',
-            Validators.required
-          ))
-      );
-      const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
-      spotCellFormGroup.patchValue(oldValues);
-      this.form.setControl('processingTimes', spotCellFormGroup);
-    }
+    const spotCellFormControlDict: Dictionary<FormGroup> = {};
+    let defaultOrder = 1;
+    spotCellKeys.forEach((cellKey) => {
+      spotCellFormControlDict[cellKey] = this.fb.group({
+        processingTime: this.fb.control('1', Validators.required),
+        order: this.fb.control(defaultOrder, Validators.min(1)),
+      });
+      defaultOrder++;
+    });
+    const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
+    //spotCellFormGroup.patchValue(oldValues);
+    this.form.setControl('processingTimes', spotCellFormGroup);
   }
 
   isSelectedCell(position: Position) {
