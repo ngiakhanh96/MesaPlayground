@@ -11,3 +11,4 @@ agv_station_pos_dict_conf = {"1": (4, 7), "2": (5, 7)}
 
 num_agv_loading_step_conf = 1
 num_agv_filling_step_conf = 1
+num_person_agent_conf = 1

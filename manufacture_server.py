@@ -85,7 +85,7 @@ total_waiting_step_graph = BarChartModule(
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
-    1,
+    num_person_agent_conf,
     1,
     len(spot_pos_dict_conf),
     1

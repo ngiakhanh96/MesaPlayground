@@ -1,4 +1,5 @@
 from configuration import *
+import numpy
 
 def get_product_processing_duration_dict():
     product_processing_duration_dict = {}

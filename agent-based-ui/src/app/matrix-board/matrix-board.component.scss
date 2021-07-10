@@ -1,10 +1,10 @@
-$unknown-color: yellow;
-$selected-color: green;
+$unknown-color: white;
+$selected-color: yellow;
 $spot-agent-color: gray;
-$agv-station-agent-color: pink;
-$worker-moving-area-color: orange;
+$agv-station-agent-color: rgb(128, 66, 9);
+$worker-moving-area-color: rgb(17, 226, 17);
 $person-agent-color: red;
-$agv-moving-area-color: purple;
+$agv-moving-area-color: orange;
 
 canvas {
   width: 100%;
@@ -51,6 +51,11 @@ canvas {
   &--person-agent {
     @extend .makeBtn;
     background-color: $person-agent-color;
+  }
+
+  &--agv-moving-area {
+    @extend .makeBtn;
+    background-color: $agv-moving-area-color;
   }
 }
 

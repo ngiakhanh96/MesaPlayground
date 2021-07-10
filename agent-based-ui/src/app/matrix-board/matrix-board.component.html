@@ -76,13 +76,21 @@
       "
     >
       <div [formGroupName]="control.key">
-        <label for="control-{{ i }}-processingTime">{{
-          "Processing Time of station " + control.key + ": "
+        <label for="control-{{ i }}-processingTimeA">{{
+          "Processing Time of A of station " + control.key + ": "
         }}</label>
         <input
-          id="control-{{ i }}-processingTime"
+          id="control-{{ i }}-processingTimeA"
           type="text"
-          formControlName="processingTime"
+          formControlName="processingTimeA"
+        />
+        <label for="control-{{ i }}-processingTimeB">{{
+          "Processing Time of B of station " + control.key + ": "
+        }}</label>
+        <input
+          id="control-{{ i }}-processingTimeB"
+          type="text"
+          formControlName="processingTimeB"
         />
         <label for="control-{{ i }}-order">{{
           "Order of station " + control.key + ": "

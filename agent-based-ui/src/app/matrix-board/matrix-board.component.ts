@@ -21,7 +21,6 @@ export interface Position {
 export interface Cell {
   isSelecting: boolean;
   responsible: AgentType;
-  order: number | null;
   modifiedDate: number;
 }
 
@@ -85,6 +84,11 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     exportDataString += `num_agv_loading_step_conf = ${formSettings.agvLoadingTime}\n`;
     exportDataString += `num_agv_filling_step_conf = ${formSettings.agvFillingTime}\n`;
 
+    const numberOfPersonAgent = Object.keys(this.cellDict).filter(
+      (key) => this.cellDict[key].responsible === AgentType.PersonAgent
+    ).length;
+    exportDataString += `num_person_agent_conf = ${numberOfPersonAgent}\n`;
+
     const agvStationKeys = Object.keys(this.cellDict).filter(
       (key) => this.cellDict[key].responsible === AgentType.AgvStationAgent
     );
@@ -123,7 +127,15 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     exportDataString += 'product_processing_duration_dict_input_conf = {';
     for (let index = 1; index < spotAgentKeys.length + 1; index++) {
       const spotAgentPosition = spotAgentKeys[index - 1];
-      exportDataString += `"${formSettings.processingTimes[spotAgentPosition].order}": {"A": [${formSettings.processingTimes[spotAgentPosition].processingTime}]}`;
+      exportDataString += `"${
+        formSettings.processingTimes[spotAgentPosition].order
+      }": {"A": [${this.getStringOrDefault(
+        formSettings.processingTimes[spotAgentPosition].processingTimeA,
+        '1'
+      )}], "B": [${this.getStringOrDefault(
+        formSettings.processingTimes[spotAgentPosition].processingTimeB,
+        '1'
+      )}]}`;
       if (index < spotAgentKeys.length) {
         exportDataString += ', ';
       }
@@ -131,20 +143,31 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     exportDataString += '} \n';
     console.log(exportDataString);
 
-    // var file = new Blob([JSON.stringify(this.form.getRawValue())]);
-    // var a = document.createElement('a'),
-    //   url = URL.createObjectURL(file);
-    // a.href = url;
-    // a.download = 'configuration.py';
-    // document.body.appendChild(a);
-    // a.click();
-    // setTimeout(function () {
-    //   document.body.removeChild(a);
-    //   window.URL.revokeObjectURL(url);
-    // }, 0);
+    const file = new Blob([exportDataString]);
+    const a = document.createElement('a'),
+      url = URL.createObjectURL(file);
+    a.href = url;
+    a.download = 'configuration.py';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 0);
   }
 
-  onMouseUp(event: Event): void {
+  getStringOrDefault(str: string, defaultStr: string): string {
+    return this.isNullOrWhiteSpace(str) ? defaultStr : str;
+  }
+
+  isNullOrWhiteSpace(str: string): boolean {
+    if (str && str.trim()) {
+      return false;
+    }
+    return true;
+  }
+
+  onMouseUp(event: Event) {
     if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
       return;
     }
@@ -157,7 +180,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.isMouseDown = false;
   }
 
-  onMouseDown(event: Event): void {
+  onMouseDown(event: Event) {
     event = event as MouseEvent;
     this.selectedAreaStartPosition = {
       x: (<MouseEvent>event).offsetX,
@@ -168,7 +191,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.updateMinMaxXY();
   }
 
-  onMouseMove(event: Event): void {
+  onMouseMove(event: Event) {
     if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
       return;
     }
@@ -239,11 +262,6 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
       .forEach((key) => {
         const cell = this.cellDict[key];
         cell.responsible = agentType;
-        if (agentType === AgentType.SpotAgent) {
-          cell.order = 1;
-        } else {
-          cell.order = null;
-        }
         cell.modifiedDate = Date.now();
       });
     const oldValues = this.processingTimesFormGroup.value;
@@ -259,7 +277,8 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     let defaultOrder = 1;
     spotCellKeys.forEach((cellKey) => {
       spotCellFormControlDict[cellKey] = this.fb.group({
-        processingTime: this.fb.control('1', Validators.required),
+        processingTimeA: this.fb.control('1'),
+        processingTimeB: this.fb.control('1'),
         order: this.fb.control(defaultOrder, Validators.min(1)),
       });
       defaultOrder++;
