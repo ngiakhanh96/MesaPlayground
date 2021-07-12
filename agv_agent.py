@@ -15,13 +15,13 @@ class Status(enum.Enum):
 
 
 class Agv_Agent(Agent):
-    def __init__(self, unique_id, name, model, home_coordinate, loading_step_duration, type):
+    def __init__(self, unique_id, name, model, home_coordinate, loading_step_duration, filling_step_duration, type):
         super().__init__(unique_id, model)
         self.name = name
         self.home_coordinate = home_coordinate
         self.loading_step_duration = loading_step_duration
         self.type = type
-        self.filling_step_duration = 1
+        self.filling_step_duration = filling_step_duration
         self.current_loading_step = 0
         self.current_filling_step = 0
         
@@ -29,7 +29,7 @@ class Agv_Agent(Agent):
         self.kanban_pos = None
         self.status = Status.Free
         self.become_free = False
-        self.distance_from_home_to_cornerX = 3
+        self.distance_from_home_to_cornerX = None
 
         self.moving_step_count = 0
         self.waiting_step_count = 0
@@ -46,7 +46,8 @@ class Agv_Agent(Agent):
         self.kanban_pos_dict = left_kanban_pos_dict_conf if self.type == Agv_Type.Left else right_kanban_pos_dict_conf
 
     def setup_coordinations(self):
-        if (self.type == Agv_Type.Left):
+        self.distance_from_home_to_cornerX = min(abs(self.home_coordinate[0] - left_x_pos_spot_column), abs(self.home_coordinate[0] - right_x_pos_spot_column)) + 2
+        if (self.type == Agv_Type.Left):   
             self.cornerX = self.home_coordinate[0] - \
                 self.distance_from_home_to_cornerX
         else:

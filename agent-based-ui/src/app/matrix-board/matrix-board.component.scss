@@ -1,0 +1,154 @@
+$unknown-color: white;
+$selected-color: yellow;
+$spot-agent-color: gray;
+$agv-station-agent-color: rgb(128, 66, 9);
+$worker-moving-area-color: rgb(17, 226, 17);
+$person-agent-color: red;
+$agv-moving-area-color: orange;
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 1000;
+}
+
+.matrix-board {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  height: 500px;
+  width: 650px;
+  position: relative;
+}
+
+.make-btn {
+  border-width: 1px;
+  &--unknown {
+    @extend .make-btn;
+    background-color: $unknown-color;
+  }
+
+  &--selected {
+    @extend .make-btn;
+    background-color: $selected-color;
+  }
+
+  &--spot-agent {
+    @extend .make-btn;
+    background-color: $spot-agent-color;
+  }
+
+  &--agv-station-agent {
+    @extend .make-btn;
+    background-color: $agv-station-agent-color;
+  }
+
+  &--worker-moving-area {
+    @extend .make-btn;
+    background-color: $worker-moving-area-color;
+  }
+
+  &--person-agent {
+    @extend .make-btn;
+    background-color: $person-agent-color;
+  }
+
+  &--agv-moving-area {
+    @extend .make-btn;
+    background-color: $agv-moving-area-color;
+  }
+}
+
+.cell {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: column;
+  border: 1px solid black;
+  user-select: none;
+  &--unknown {
+    @extend .cell;
+    background-color: $unknown-color;
+  }
+
+  &--selected {
+    @extend .cell;
+    background-color: $selected-color;
+  }
+
+  &--spot-agent {
+    @extend .cell;
+    background-color: $spot-agent-color;
+  }
+
+  &--agv-station-agent {
+    @extend .cell;
+    background-color: $agv-station-agent-color;
+  }
+
+  &--worker-moving-area {
+    @extend .cell;
+    background-color: $worker-moving-area-color;
+  }
+
+  &--person-agent {
+    @extend .cell;
+    background-color: $person-agent-color;
+  }
+
+  &--agv-moving-area {
+    @extend .cell;
+    background-color: $agv-moving-area-color;
+  }
+}
+
+table,
+th,
+td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+td::after {
+  content: " ";
+}
+
+input {
+  width: 100%;
+  border: none;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.agv-configuration {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.work-station-processing-times {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.submit-btn {
+  margin-top: 10px;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

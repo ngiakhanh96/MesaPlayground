@@ -85,7 +85,7 @@ total_waiting_step_graph = BarChartModule(
 number_of_agents_slider = UserSettableParameter(
     "slider",
     "Number of Agents",
-    1,
+    num_person_agent_conf,
     1,
     len(spot_pos_dict_conf),
     1
@@ -140,11 +140,11 @@ agent_movement_radius_choice = UserSettableParameter(
     value=7,
     choices=[4, 5, 7])
 
-num_agv_loading_step_choice = UserSettableParameter(
-    'choice',
-    'Loading time for agv (seconds)',
-    value=1,
-    choices=[1, 2, 3, 4, 5, 6, 7, 8])
+# num_agv_loading_step_choice = UserSettableParameter(
+#     'choice',
+#     'Loading time for agv (seconds)',
+#     value=1,
+#     choices=[1, 2, 3, 4, 5, 6, 7, 8])
 
 server = ModularServer(
     Manufacture_Model,
@@ -160,8 +160,7 @@ server = ModularServer(
         "num_max_waiting_products": num_max_waiting_products_slider,
         "num_agv": num_agv_slider,
         "num_min_kanban_to_refill": num_min_kanban_to_refill_slider,
-        "movement_radius": agent_movement_radius_choice,
-        "num_agv_loading_step": num_agv_loading_step_choice
+        "movement_radius": agent_movement_radius_choice
     }
 )
 

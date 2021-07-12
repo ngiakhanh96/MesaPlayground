@@ -1,0 +1,129 @@
+<div class="content">
+  <div
+    class="matrix-board"
+    (window:resize)="onResizeCanvas()"
+    (mouseup)="onMouseUp($event)"
+    (mousedown)="onMouseDown($event)"
+    (mousemove)="onMouseMove($event)"
+    #mainContainer
+  >
+    <canvas #canvas></canvas>
+    <ng-container *ngFor="let ch of height; let y = index">
+      <div
+        *ngFor="let cw of width; let x = index"
+        [class]="
+          getCellClass(
+            {
+              x,
+              y
+            }
+          )
+        "
+        [style.height.%]="100 / height.length"
+        [style.width.%]="100 / width.length"
+      >
+        {{ x + ", " + y }}
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="button-group">
+    <button class="make-btn--unknown" (click)="onMake(AgentType.Unknown)">
+      Reset
+    </button>
+    <button class="make-btn--spot-agent" (click)="onMake(AgentType.SpotAgent)">
+      Make spot
+    </button>
+    <button
+      class="make-btn--agv-station-agent"
+      (click)="onMake(AgentType.AgvStationAgent)"
+    >
+      Make agv station
+    </button>
+    <button
+      class="make-btn--worker-moving-area"
+      (click)="onMake(AgentType.WorkerMovingArea)"
+    >
+      Make worker moving area
+    </button>
+    <button
+      class="make-btn--person-agent"
+      (click)="onMake(AgentType.PersonAgent)"
+    >
+      Make person
+    </button>
+    <button
+      class="make-btn--agv-moving-area"
+      (click)="onMake(AgentType.AgvMovingArea)"
+    >
+      Make agv moving area
+    </button>
+  </div>
+
+  <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="agv-configuration">
+      <h2>AGV Configuration</h2>
+      <table>
+        <tr>
+          <th>Component Load-up time</th>
+          <th>Component Drop-down time</th>
+        </tr>
+        <tr>
+          <td>
+            <input
+              id="agvLoadingTime"
+              type="number"
+              formControlName="agvLoadingTime"
+            />
+          </td>
+          <td>
+            <input
+              id="agvFillingTime"
+              type="number"
+              formControlName="agvFillingTime"
+            />
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="work-station-processing-times" formGroupName="processingTimes">
+      <h2>Work Station Processing Times</h2>
+      <table *ngIf="showWorkStationProcessingTimesTable()">
+        <tr>
+          <th>Type of Product</th>
+          <th
+            *ngFor="
+              let control of processingTimesFormGroup.controls
+                | keyvalue: keyValueSortFn;
+              let i = index;
+              trackBy: trackByFn
+            "
+            [formGroupName]="control.key"
+          >
+            {{ "Work station " + (i + 1) + " (" + control.key + ")" }}
+          </th>
+        </tr>
+        <tr *ngFor="let productName of productNames">
+          <td>{{ productName }}</td>
+          <td
+            *ngFor="
+              let control of processingTimesFormGroup.controls
+                | keyvalue: keyValueSortFn;
+              let i = index;
+              trackBy: trackByFn
+            "
+            [formGroupName]="control.key"
+          >
+            <input
+              [id]="'control-{{ i }}-processingTime' + productName"
+              type="text"
+              [formControlName]="'processingTime' + productName"
+            />
+          </td>
+        </tr>
+      </table>
+    </div>
+    <button class="submit-btn" type="submit">Save</button>
+  </form>
+</div>
