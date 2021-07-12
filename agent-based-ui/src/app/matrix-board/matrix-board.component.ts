@@ -9,6 +9,7 @@ import {
 import {
   AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
@@ -32,6 +33,7 @@ export interface Cell {
 export class MatrixBoardComponent implements OnInit, AfterViewInit {
   width: number[] = [].constructor(10);
   height: number[] = [].constructor(10);
+  productNames: string[] = ['A', 'B'];
   cellWidth: number = 0;
   cellHeight: number = 0;
   selectedAreaStartPosition: Position | null = null;
@@ -92,6 +94,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     const agvStationKeys = Object.keys(this.cellDict).filter(
       (key) => this.cellDict[key].responsible === AgentType.AgvStationAgent
     );
+
     exportDataString += 'agv_station_pos_dict_conf = {';
     for (let index = 1; index < agvStationKeys.length + 1; index++) {
       exportDataString += `"${index}": (${agvStationKeys[index - 1]})`;
@@ -99,7 +102,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
         exportDataString += ', ';
       }
     }
-    exportDataString += '} \n';
+    exportDataString += '}\n';
 
     const spotAgentKeys = Object.keys(this.cellDict)
       .filter((key) => this.cellDict[key].responsible === AgentType.SpotAgent)
@@ -108,6 +111,10 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
           formSettings.processingTimes[a].order -
           formSettings.processingTimes[b].order
       );
+    if (spotAgentKeys.length === 0) {
+      alert('There are no spot');
+      return;
+    }
     const xPosList = spotAgentKeys.map((key) => +key.split(', ')[0]);
     const minX = Math.min(...xPosList);
     const maxX = Math.max(...xPosList);
@@ -122,28 +129,36 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
         exportDataString += ', ';
       }
     }
-    exportDataString += '} \n';
+    exportDataString += '}\n';
 
     exportDataString += 'product_processing_duration_dict_input_conf = {';
     for (let index = 1; index < spotAgentKeys.length + 1; index++) {
       const spotAgentPosition = spotAgentKeys[index - 1];
-      exportDataString += `"${
-        formSettings.processingTimes[spotAgentPosition].order
-      }": {"A": [${this.getStringOrDefault(
-        formSettings.processingTimes[spotAgentPosition].processingTimeA,
-        '1'
-      )}], "B": [${this.getStringOrDefault(
-        formSettings.processingTimes[spotAgentPosition].processingTimeB,
-        '1'
-      )}]}`;
+      exportDataString += `"${formSettings.processingTimes[spotAgentPosition].order}": {`;
+      this.productNames.forEach((productName, i) => {
+        exportDataString += `"${productName}": [${this.getStringOrDefault(
+          formSettings.processingTimes[spotAgentPosition][
+            'processingTime' + productName
+          ],
+          '1'
+        )}]`;
+        if (i < this.productNames.length - 1) {
+          exportDataString += ', ';
+        }
+      });
+      exportDataString += '}';
       if (index < spotAgentKeys.length) {
         exportDataString += ', ';
       }
     }
-    exportDataString += '} \n';
-    console.log(exportDataString);
+    exportDataString += '}\n';
 
-    const file = new Blob([exportDataString]);
+    console.log(exportDataString);
+    this.exportToFile(exportDataString);
+  }
+
+  exportToFile(content: string) {
+    const file = new Blob([content]);
     const a = document.createElement('a'),
       url = URL.createObjectURL(file);
     a.href = url;
@@ -208,8 +223,13 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.canvasCtx!.stroke();
   }
 
-  getCellClass(position: Position, cellKey: string): string {
-    const isSelectedCell = this.isSelectedCell(position);
+  getCellClass(cellPosition: Position): string {
+    const topLeftCoordinate = <Position>{
+      x: cellPosition.x * this.cellWidth,
+      y: (this.height.length - 1 - cellPosition.y) * this.cellHeight,
+    };
+    const isSelectedCell = this.isSelectedCell(topLeftCoordinate);
+    const cellKey = `${cellPosition.x}, ${cellPosition.y}`;
     if (this.cellDict[cellKey] == null) {
       this.cellDict[cellKey] = {
         isSelecting: false,
@@ -240,6 +260,10 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   get processingTimesFormGroup() {
     return this.form.get('processingTimes') as FormGroup;
+  }
+
+  showWorkStationProcessingTimesTable(): boolean {
+    return Object.keys(this.processingTimesFormGroup.controls).length > 0;
   }
 
   trackByFn(
@@ -276,11 +300,17 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     const spotCellFormControlDict: Dictionary<FormGroup> = {};
     let defaultOrder = 1;
     spotCellKeys.forEach((cellKey) => {
-      spotCellFormControlDict[cellKey] = this.fb.group({
-        processingTimeA: this.fb.control('1'),
-        processingTimeB: this.fb.control('1'),
-        order: this.fb.control(defaultOrder, Validators.min(1)),
-      });
+      const spotCellFormControlObj: Dictionary<FormControl> = {};
+      this.productNames.forEach(
+        (productName) =>
+          (spotCellFormControlObj[`processingTime${productName}`] =
+            this.fb.control('1'))
+      );
+      spotCellFormControlObj['order'] = this.fb.control(
+        defaultOrder,
+        Validators.min(1)
+      );
+      spotCellFormControlDict[cellKey] = this.fb.group(spotCellFormControlObj);
       defaultOrder++;
     });
     const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
@@ -288,20 +318,22 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.form.setControl('processingTimes', spotCellFormGroup);
   }
 
-  isSelectedCell(position: Position) {
+  isSelectedCell(topLeftCoordinate: Position) {
     if (this.minMaxXYs.length === 0) {
       return false;
     }
     const [minX, maxX, minY, maxY] = [...this.minMaxXYs];
     if (
-      ((position.x + this.cellWidth <= maxX &&
-        position.x + this.cellWidth >= minX) ||
-        (position.x <= maxX && position.x >= minX) ||
-        (position.x < minX && position.x + this.cellWidth > maxX)) &&
-      ((position.y + this.cellHeight <= maxY &&
-        position.y + this.cellHeight >= minY) ||
-        (position.y <= maxY && position.y >= minY) ||
-        (position.y < minY && position.y + this.cellHeight > maxY))
+      ((topLeftCoordinate.x + this.cellWidth <= maxX &&
+        topLeftCoordinate.x + this.cellWidth >= minX) ||
+        (topLeftCoordinate.x <= maxX && topLeftCoordinate.x >= minX) ||
+        (topLeftCoordinate.x < minX &&
+          topLeftCoordinate.x + this.cellWidth > maxX)) &&
+      ((topLeftCoordinate.y + this.cellHeight <= maxY &&
+        topLeftCoordinate.y + this.cellHeight >= minY) ||
+        (topLeftCoordinate.y <= maxY && topLeftCoordinate.y >= minY) ||
+        (topLeftCoordinate.y < minY &&
+          topLeftCoordinate.y + this.cellHeight > maxY))
     ) {
       return true;
     }
