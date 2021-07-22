@@ -6,10 +6,78 @@ $worker-moving-area-color: rgb(17, 226, 17);
 $person-agent-color: red;
 $agv-moving-area-color: orange;
 
-.content {
+@mixin bar-button-group($width, $color) {
+  @content;
+  display: flex;
+  justify-content: space-evenly;
+  width: $width;
+  > a {
+    @include bar-button($color);
+  }
+}
+
+@mixin bar-button($color) {
+  color: $color;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.container {
   display: flex;
   flex-direction: column;
+}
+
+.task-bar {
+  height: 40px;
+  background-color: black;
+  display: flex;
+  justify-content: space-between;
+}
+
+.info-button-group {
+  @include bar-button-group(400px, white) {
+    margin-left: 50px;
+  }
+}
+
+.action-button-group {
+  @include bar-button-group(200px, white) {
+    margin-right: 50px;
+  }
+}
+
+.tab-bar {
+  height: 40px;
+  background-color: rgb(211, 203, 203);
+  display: flex;
+  justify-content: flex-start;
+}
+
+.tab-button-group {
+  @include bar-button-group(400px, black) {
+    margin-left: 50px;
+  }
+}
+
+.content {
+  display: flex;
   align-items: center;
+  overflow: auto;
+  padding: 40px 15px 0px 15px;
+}
+
+.configuration {
+  flex-grow: 1;
+}
+
+.matrix-board {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  height: 400px;
+  width: 550px;
+  position: relative;
+  flex-shrink: 0;
 }
 
 canvas {
@@ -17,14 +85,6 @@ canvas {
   height: 100%;
   position: absolute;
   z-index: 1000;
-}
-
-.matrix-board {
-  display: flex;
-  flex-wrap: wrap-reverse;
-  height: 500px;
-  width: 650px;
-  position: relative;
 }
 
 .make-btn {
@@ -123,12 +183,6 @@ td::after {
 input {
   width: 100%;
   border: none;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .agv-configuration {

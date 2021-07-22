@@ -11,6 +11,7 @@ import {
   FormBuilder,
   FormControl,
   FormGroup,
+  FormGroupDirective,
   Validators,
 } from '@angular/forms';
 import { AgentType } from '../enums/AgentType.enum';
@@ -67,11 +68,11 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.canvasCtx = this.canvasArea.nativeElement.getContext('2d')!;
-    this.cellWidth =
-      this.mainContainer.nativeElement.offsetWidth / this.width.length;
-    this.cellHeight =
-      this.mainContainer.nativeElement.offsetHeight / this.height.length;
     this.onResizeCanvas();
+  }
+
+  onSave(formGroup: FormGroupDirective) {
+    formGroup.ngSubmit.emit();
   }
 
   onSubmit() {
@@ -368,6 +369,10 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
   }
 
   onResizeCanvas() {
+    this.cellWidth =
+      this.mainContainer.nativeElement.offsetWidth / this.width.length;
+    this.cellHeight =
+      this.mainContainer.nativeElement.offsetHeight / this.height.length;
     this.canvasCtx!.canvas.width =
       this.mainContainer!.nativeElement.offsetWidth;
     this.canvasCtx!.canvas.height =
