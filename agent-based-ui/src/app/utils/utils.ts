@@ -13,4 +13,11 @@ export class Utils {
     });
     return dict;
   }
+
+  static isNullOrWhiteSpace(str: string): boolean {
+    if (str && str.trim()) {
+      return false;
+    }
+    return true;
+  }
 }

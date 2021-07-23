@@ -1,6 +1,7 @@
 import { KeyValue } from '@angular/common';
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnInit,
@@ -15,6 +16,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { AgentType } from '../enums/AgentType.enum';
+import { NotificationService } from '../services/notification.service';
+import { Utils } from '../utils/utils';
+import { Config } from './config-panel/config-panel.component';
 
 export interface Position {
   x: number;
@@ -37,8 +41,13 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
   productNames: string[] = ['A', 'B'];
   cellWidth: number = 0;
   cellHeight: number = 0;
+
   selectedAreaStartPosition: Position | null = null;
   selectedAreaEndPosition: Position | null = null;
+
+  showWorkStationConfigPanel: boolean = false;
+  showWorkerConfigPanel: boolean = false;
+  showAgvConfigPanel: boolean = false;
 
   @ViewChild('mainContainer', { static: true })
   mainContainer!: ElementRef<HTMLDivElement>;
@@ -60,15 +69,75 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     processingTimes: this.fb.group({}),
   });
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private notificationService: NotificationService
+  ) {}
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit() {
     this.onResizeCanvas();
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.canvasCtx = this.canvasArea.nativeElement.getContext('2d')!;
     this.onResizeCanvas();
+  }
+
+  onClickShowWorkStationConfigPanel() {
+    this.showWorkStationConfigPanel = !this.showWorkStationConfigPanel;
+  }
+
+  onClickShowWorkerConfigPanel() {
+    this.showWorkerConfigPanel = !this.showWorkerConfigPanel;
+  }
+
+  onClickShowAgvConfigPanel() {
+    this.showAgvConfigPanel = !this.showAgvConfigPanel;
+  }
+
+  get workStationConfig(): Config[] {
+    return [
+      <Config>{
+        id: 'workStation',
+        textTitle: 'Location of Work Station',
+        description: 'Description',
+        buttonFn: () => this.onMake(AgentType.SpotAgent),
+      },
+    ];
+  }
+
+  get workerConfig(): Config[] {
+    return [
+      <Config>{
+        id: 'worker',
+        textTitle: 'Location of worker',
+        description: 'Description',
+        buttonFn: () => this.onMake(AgentType.PersonAgent),
+      },
+      <Config>{
+        id: 'workerArea',
+        textTitle: 'Working Area of Worker(s)',
+        description: 'Description',
+        buttonFn: () => this.onMake(AgentType.WorkerMovingArea),
+      },
+    ];
+  }
+
+  get agvConfig(): Config[] {
+    return [
+      <Config>{
+        id: 'agvStation',
+        textTitle: 'Location of AGV',
+        description: 'Description',
+        buttonFn: () => this.onMake(AgentType.AgvStationAgent),
+      },
+      <Config>{
+        id: 'agvArea',
+        textTitle: 'Working Area of AGV(s)',
+        description: 'Description',
+        buttonFn: () => this.onMake(AgentType.AgvMovingArea),
+      },
+    ];
   }
 
   onSave(formGroup: FormGroupDirective) {
@@ -173,14 +242,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
   }
 
   getStringOrDefault(str: string, defaultStr: string): string {
-    return this.isNullOrWhiteSpace(str) ? defaultStr : str;
-  }
-
-  isNullOrWhiteSpace(str: string): boolean {
-    if (str && str.trim()) {
-      return false;
-    }
-    return true;
+    return Utils.isNullOrWhiteSpace(str) ? defaultStr : str;
   }
 
   onMouseUp(event: Event) {
@@ -317,6 +379,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
     //spotCellFormGroup.patchValue(oldValues);
     this.form.setControl('processingTimes', spotCellFormGroup);
+    this.notificationService.notify(true);
   }
 
   isSelectedCell(topLeftCoordinate: Position) {

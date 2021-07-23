@@ -1,0 +1,16 @@
+<div class="container">
+  <div class="small-panel" *ngFor="let config of configs">
+    <div class="title">
+      {{ config.textTitle }}
+    </div>
+    <div class="button">
+      <button type="button" (click)="onClick(config)">
+        {{ config.buttonText || "Choose" }}
+      </button>
+      <span>{{ config.description }}</span>
+    </div>
+    <div style="overflow: auto" *ngIf="config.id == configPanelTableId">
+      <ng-template [ngTemplateOutlet]="configPanelTableTmp"></ng-template>
+    </div>
+  </div>
+</div>

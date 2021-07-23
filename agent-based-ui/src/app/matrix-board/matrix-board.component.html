@@ -18,126 +18,94 @@
     </div>
     <div class="tab-bar">
       <div class="tab-button-group">
-        <a href="#"> Work Station </a>
-        <a href="#"> Worker </a>
-        <a href="#"> Agv </a>
+        <a href="#" (click)="onClickShowWorkStationConfigPanel()">
+          Work Station
+        </a>
+        <a href="#" (click)="onClickShowWorkerConfigPanel()"> Worker </a>
+        <a href="#" (click)="onClickShowAgvConfigPanel()"> Agv </a>
       </div>
     </div>
 
     <div class="content">
       <div class="configuration">
-        <div class="button-group">
-          <button
-            type="button"
-            class="make-btn--unknown"
-            (click)="onMake(AgentType.Unknown)"
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            class="make-btn--spot-agent"
-            (click)="onMake(AgentType.SpotAgent)"
-          >
-            Make spot
-          </button>
-          <button
-            type="button"
-            class="make-btn--agv-station-agent"
-            (click)="onMake(AgentType.AgvStationAgent)"
-          >
-            Make agv station
-          </button>
-          <button
-            type="button"
-            class="make-btn--worker-moving-area"
-            (click)="onMake(AgentType.WorkerMovingArea)"
-          >
-            Make worker moving area
-          </button>
-          <button
-            type="button"
-            class="make-btn--person-agent"
-            (click)="onMake(AgentType.PersonAgent)"
-          >
-            Make person
-          </button>
-          <button
-            type="button"
-            class="make-btn--agv-moving-area"
-            (click)="onMake(AgentType.AgvMovingArea)"
-          >
-            Make agv moving area
-          </button>
-        </div>
-
-        <div class="agv-configuration">
-          <h2>AGV Configuration</h2>
-          <table>
-            <tr>
-              <th>Component Load-up time</th>
-              <th>Component Drop-down time</th>
-            </tr>
-            <tr>
-              <td>
-                <input
-                  id="agvLoadingTime"
-                  type="number"
-                  formControlName="agvLoadingTime"
-                />
-              </td>
-              <td>
-                <input
-                  id="agvFillingTime"
-                  type="number"
-                  formControlName="agvFillingTime"
-                />
-              </td>
-            </tr>
-          </table>
-        </div>
-
-        <div
-          class="work-station-processing-times"
-          formGroupName="processingTimes"
-        >
-          <h2>Work Station Processing Times</h2>
-          <table *ngIf="showWorkStationProcessingTimesTable()">
-            <tr>
-              <th>Type of Product</th>
-              <th
-                *ngFor="
-                  let control of processingTimesFormGroup.controls
-                    | keyvalue: keyValueSortFn;
-                  let i = index;
-                  trackBy: trackByFn
-                "
-                [formGroupName]="control.key"
+        <div class="config-panel-container" *ngIf="showWorkStationConfigPanel">
+          <app-config-panel [configs]="workStationConfig">
+            <ng-template appConfigPanelTableTmp id="workStation">
+              <div
+                class="work-station-processing-times"
+                formGroupName="processingTimes"
               >
-                {{ "Work station " + (i + 1) + " (" + control.key + ")" }}
-              </th>
-            </tr>
-            <tr *ngFor="let productName of productNames">
-              <td>{{ productName }}</td>
-              <td
-                *ngFor="
-                  let control of processingTimesFormGroup.controls
-                    | keyvalue: keyValueSortFn;
-                  let i = index;
-                  trackBy: trackByFn
-                "
-                [formGroupName]="control.key"
-              >
-                <input
-                  [id]="'control-{{ i }}-processingTime' + productName"
-                  type="text"
-                  [formControlName]="'processingTime' + productName"
-                />
-              </td>
-            </tr>
-          </table>
+                <table *ngIf="showWorkStationProcessingTimesTable()">
+                  <tr>
+                    <th>Type of Product</th>
+                    <th
+                      *ngFor="
+                        let control of processingTimesFormGroup.controls
+                          | keyvalue: keyValueSortFn;
+                        let i = index;
+                        trackBy: trackByFn
+                      "
+                      [formGroupName]="control.key"
+                    >
+                      {{ "Work station " + (i + 1) + " (" + control.key + ")" }}
+                    </th>
+                  </tr>
+                  <tr *ngFor="let productName of productNames">
+                    <td>{{ productName }}</td>
+                    <td
+                      *ngFor="
+                        let control of processingTimesFormGroup.controls
+                          | keyvalue: keyValueSortFn;
+                        let i = index;
+                        trackBy: trackByFn
+                      "
+                      [formGroupName]="control.key"
+                    >
+                      <input
+                        [id]="'control-{{ i }}-processingTime' + productName"
+                        type="text"
+                        [formControlName]="'processingTime' + productName"
+                      />
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </ng-template>
+          </app-config-panel>
         </div>
-        <button class="submit-btn" type="submit">Save</button>
+        <div class="config-panel-container" *ngIf="showWorkerConfigPanel">
+          <app-config-panel [configs]="workerConfig"></app-config-panel>
+        </div>
+        <div class="config-panel-container" *ngIf="showAgvConfigPanel">
+          <app-config-panel [configs]="agvConfig">
+            <ng-template appConfigPanelTableTmp id="agvStation">
+              <div class="agv-configuration">
+                <table>
+                  <tr>
+                    <th>Component Load-up time</th>
+                    <th>Component Drop-down time</th>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input
+                        id="agvLoadingTime"
+                        type="number"
+                        formControlName="agvLoadingTime"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        id="agvFillingTime"
+                        type="number"
+                        formControlName="agvFillingTime"
+                      />
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </ng-template>
+          </app-config-panel>
+        </div>
       </div>
       <div
         class="matrix-board"
