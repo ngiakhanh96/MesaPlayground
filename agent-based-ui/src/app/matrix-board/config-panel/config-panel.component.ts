@@ -1,3 +1,4 @@
+import { Utils } from './../../utils/utils';
 import {
   AfterViewInit,
   ChangeDetectorRef,
@@ -17,7 +18,6 @@ export interface Config {
   description: string;
   buttonText?: string;
   buttonFn: () => void;
-  showDescription?: boolean;
 }
 
 @Directive({ selector: '[appConfigPanelTableTmp]' })
@@ -33,6 +33,9 @@ export class ConfigPanelTableTemplateDirective {
 })
 export class ConfigPanelComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() set configs(v: Config[]) {
+    if (Utils.isEqual(v, this._configs)) {
+      return;
+    }
     this._configs = v;
     this._descriptionStateDict = {};
     this._configs.forEach(

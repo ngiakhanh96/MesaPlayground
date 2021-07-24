@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 export class Utils {
   static generateNewId(): string {
     return Date.now().toString();
@@ -19,5 +20,9 @@ export class Utils {
       return false;
     }
     return true;
+  }
+
+  static isEqual(x: unknown, y: unknown): boolean {
+    return JSON.stringify(x) == JSON.stringify(y);
   }
 }
