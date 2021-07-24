@@ -27,10 +27,8 @@ export class ConfigPanelComponent implements OnInit {
       return;
     }
     this._configs = v;
-    this._descriptionStateDict = {};
-    this._configs.forEach(
-      (cfg) => (this._descriptionStateDict[cfg.id] = false)
-    );
+    this.descriptionStateDict = {};
+    this._configs.forEach((cfg) => (this.descriptionStateDict[cfg.id] = false));
   }
   get configs(): Config[] {
     return this._configs;
@@ -38,8 +36,6 @@ export class ConfigPanelComponent implements OnInit {
 
   @ContentChild(ConfigPanelTableTemplateDirective)
   configPanelTableDirective: ConfigPanelTableTemplateDirective | null = null;
-
-  _configs: Config[] = [];
 
   get configPanelTableId(): string | null {
     return this.configPanelTableDirective?.id ?? null;
@@ -49,7 +45,8 @@ export class ConfigPanelComponent implements OnInit {
     return this.configPanelTableDirective?.template ?? null;
   }
 
-  _descriptionStateDict: Dictionary<boolean> = {};
+  descriptionStateDict: Dictionary<boolean> = {};
+  _configs: Config[] = [];
 
   constructor() {}
 
@@ -60,8 +57,7 @@ export class ConfigPanelComponent implements OnInit {
   }
 
   toggleDescription(configId: string) {
-    this._descriptionStateDict[configId] =
-      !this._descriptionStateDict[configId];
+    this.descriptionStateDict[configId] = !this.descriptionStateDict[configId];
   }
 
   showDescription(configId: string): boolean {

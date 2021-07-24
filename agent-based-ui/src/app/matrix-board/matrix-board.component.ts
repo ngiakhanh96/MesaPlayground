@@ -67,7 +67,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     processingTimes: this.fb.group({}),
   });
 
-  whiteListElementIds: string[] = ['ChooseBtn'];
+  whiteListElementIds: string[] = ['ChooseBtn', 'ResetBtn'];
 
   //#region User Config
   workStationConfig: Config[] = [
@@ -258,8 +258,8 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
       y: event.offsetY,
     };
     this.updateMinMaxXY();
-    this.resetCanvas();
     this.isMouseDown = false;
+    this.resetCanvas();
   }
 
   onMouseDown(event: MouseEvent) {
@@ -269,8 +269,8 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
         y: event.offsetY,
       };
       this.selectedAreaEndPosition = null;
-      this.isMouseDown = true;
       this.updateMinMaxXY();
+      this.isMouseDown = true;
     } else {
       this.onMouseUp(event);
     }
@@ -297,13 +297,17 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     console.log(event);
     const focusOutRelatedTargetElementId = (
       event.relatedTarget as HTMLElement
-    ).attributes.getNamedItem('id')?.value;
+    )?.attributes.getNamedItem('id')?.value;
     if (
       focusOutRelatedTargetElementId != null &&
       this.whiteListElementIds.includes(focusOutRelatedTargetElementId)
     ) {
       return;
     }
+    this.resetSelectedArea();
+  }
+
+  resetSelectedArea() {
     this.selectedAreaStartPosition = null;
     this.selectedAreaEndPosition = null;
     this.updateMinMaxXY();
@@ -403,6 +407,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
     //spotCellFormGroup.patchValue(oldValues);
     this.form.setControl('processingTimes', spotCellFormGroup);
+    this.resetSelectedArea();
   }
 
   isSelectedCell(topLeftCoordinate: Position) {

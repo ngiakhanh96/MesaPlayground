@@ -138,7 +138,6 @@ canvas {
   align-content: center;
   flex-direction: column;
   border: 1px solid black;
-  user-select: none;
   &--unknown {
     @extend .cell;
     background-color: $unknown-color;
@@ -218,4 +217,5 @@ input {
   display: block;
   width: 100%;
   height: 100%;
+  user-select: none;
 }
