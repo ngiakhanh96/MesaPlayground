@@ -67,6 +67,52 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     processingTimes: this.fb.group({}),
   });
 
+  whiteListElementIds: string[] = ['ChooseBtn'];
+
+  //#region User Config
+  workStationConfig: Config[] = [
+    <Config>{
+      id: 'workStation',
+      textTitle: 'Location of Work Station',
+      description: 'Description',
+      buttonFn: () => this.onMake(AgentType.SpotAgent),
+    },
+  ];
+
+  workerConfig: Config[] = [
+    <Config>{
+      id: 'worker',
+      textTitle: 'Location of worker',
+      description: 'Description',
+      buttonFn: () => this.onMake(AgentType.PersonAgent),
+    },
+    <Config>{
+      id: 'workerArea',
+      textTitle: 'Working Area of Worker(s)',
+      description: 'Description',
+      buttonFn: () => this.onMake(AgentType.WorkerMovingArea),
+    },
+  ];
+
+  agvConfig: Config[] = [
+    <Config>{
+      id: 'agvStation',
+      textTitle: 'Location of AGV',
+      description: 'Description',
+      buttonFn: () => this.onMake(AgentType.AgvStationAgent),
+    },
+    <Config>{
+      id: 'agvArea',
+      textTitle: 'Working Area of AGV(s)',
+      description: 'Description',
+      buttonFn: () => this.onMake(AgentType.AgvMovingArea),
+    },
+  ];
+
+  about: string = 'About';
+  instruction: string = 'Instruction';
+  //#endregion
+
   constructor(private fb: FormBuilder) {}
 
   ngAfterViewInit() {
@@ -76,6 +122,14 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.canvasCtx = this.canvasArea.nativeElement.getContext('2d')!;
     this.onResizeCanvas();
+  }
+
+  onClickAbout() {
+    alert(this.about);
+  }
+
+  onClickInstruction() {
+    alert(this.instruction);
   }
 
   onClickShowWorkStationConfigPanel() {
@@ -88,51 +142,6 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
 
   onClickShowAgvConfigPanel() {
     this.showAgvConfigPanel = !this.showAgvConfigPanel;
-  }
-
-  get workStationConfig(): Config[] {
-    return [
-      <Config>{
-        id: 'workStation',
-        textTitle: 'Location of Work Station',
-        description: 'Description',
-        buttonFn: () => this.onMake(AgentType.SpotAgent),
-      },
-    ];
-  }
-
-  get workerConfig(): Config[] {
-    return [
-      <Config>{
-        id: 'worker',
-        textTitle: 'Location of worker',
-        description: 'Description',
-        buttonFn: () => this.onMake(AgentType.PersonAgent),
-      },
-      <Config>{
-        id: 'workerArea',
-        textTitle: 'Working Area of Worker(s)',
-        description: 'Description',
-        buttonFn: () => this.onMake(AgentType.WorkerMovingArea),
-      },
-    ];
-  }
-
-  get agvConfig(): Config[] {
-    return [
-      <Config>{
-        id: 'agvStation',
-        textTitle: 'Location of AGV',
-        description: 'Description',
-        buttonFn: () => this.onMake(AgentType.AgvStationAgent),
-      },
-      <Config>{
-        id: 'agvArea',
-        textTitle: 'Working Area of AGV(s)',
-        description: 'Description',
-        buttonFn: () => this.onMake(AgentType.AgvMovingArea),
-      },
-    ];
   }
 
   onSave(formGroup: FormGroupDirective) {
@@ -240,37 +249,40 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     return Utils.isNullOrWhiteSpace(str) ? defaultStr : str;
   }
 
-  onMouseUp(event: Event) {
+  onMouseUp(event: MouseEvent) {
     if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
       return;
     }
     this.selectedAreaEndPosition = {
-      x: (<MouseEvent>event).offsetX,
-      y: (<MouseEvent>event).offsetY,
+      x: event.offsetX,
+      y: event.offsetY,
     };
     this.updateMinMaxXY();
     this.resetCanvas();
     this.isMouseDown = false;
   }
 
-  onMouseDown(event: Event) {
-    event = event as MouseEvent;
-    this.selectedAreaStartPosition = {
-      x: (<MouseEvent>event).offsetX,
-      y: (<MouseEvent>event).offsetY,
-    };
-    this.selectedAreaEndPosition = null;
-    this.isMouseDown = true;
-    this.updateMinMaxXY();
+  onMouseDown(event: MouseEvent) {
+    if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
+      this.selectedAreaStartPosition = {
+        x: event.offsetX,
+        y: event.offsetY,
+      };
+      this.selectedAreaEndPosition = null;
+      this.isMouseDown = true;
+      this.updateMinMaxXY();
+    } else {
+      this.onMouseUp(event);
+    }
   }
 
-  onMouseMove(event: Event) {
+  onMouseMove(event: MouseEvent) {
     if (!this.isMouseDown || this.selectedAreaStartPosition == null) {
       return;
     }
     this.selectedAreaEndPosition = {
-      x: (<MouseEvent>event).offsetX,
-      y: (<MouseEvent>event).offsetY,
+      x: event.offsetX,
+      y: event.offsetY,
     };
     this.updateMinMaxXY();
 
@@ -279,6 +291,23 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     this.canvasCtx!.beginPath();
     this.canvasCtx!.rect(minX, minY, maxX - minX, maxY - minY);
     this.canvasCtx!.stroke();
+  }
+
+  onFocusOut(event: FocusEvent) {
+    console.log(event);
+    const focusOutRelatedTargetElementId = (
+      event.relatedTarget as HTMLElement
+    ).attributes.getNamedItem('id')?.value;
+    if (
+      focusOutRelatedTargetElementId != null &&
+      this.whiteListElementIds.includes(focusOutRelatedTargetElementId)
+    ) {
+      return;
+    }
+    this.selectedAreaStartPosition = null;
+    this.selectedAreaEndPosition = null;
+    this.updateMinMaxXY();
+    this.resetCanvas();
   }
 
   getCellClass(cellPosition: Position): string {

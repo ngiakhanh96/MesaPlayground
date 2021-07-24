@@ -8,8 +8,8 @@
     <div class="task-bar">
       <div class="info-button-group">
         <a href="#"> Manufacture Model </a>
-        <a href="#"> About </a>
-        <a href="#"> Instruction </a>
+        <a href="#" (click)="onClickAbout()"> About </a>
+        <a href="#" (click)="onClickInstruction()"> Instruction </a>
       </div>
       <div class="action-button-group">
         <a href="#" (click)="onSave(myForm)"> Save </a>
@@ -113,6 +113,8 @@
         (mouseup)="onMouseUp($event)"
         (mousedown)="onMouseDown($event)"
         (mousemove)="onMouseMove($event)"
+        (focusout)="onFocusOut($event)"
+        tabindex="100"
         #mainContainer
       >
         <canvas #canvas></canvas>

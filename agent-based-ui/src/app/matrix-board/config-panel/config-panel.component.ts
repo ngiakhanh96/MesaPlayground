@@ -1,15 +1,6 @@
 import { Utils } from './../../utils/utils';
-import {
-  AfterViewInit,
-  ChangeDetectorRef,
-  ContentChild,
-  Directive,
-  Input,
-  OnDestroy,
-  TemplateRef,
-} from '@angular/core';
+import { ContentChild, Directive, Input, TemplateRef } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
 
 export interface Config {
   id: string;
@@ -30,7 +21,7 @@ export class ConfigPanelTableTemplateDirective {
   templateUrl: './config-panel.component.html',
   styleUrls: ['./config-panel.component.scss'],
 })
-export class ConfigPanelComponent implements OnInit, OnDestroy {
+export class ConfigPanelComponent implements OnInit {
   @Input() set configs(v: Config[]) {
     if (Utils.isEqual(v, this._configs)) {
       return;
@@ -40,7 +31,6 @@ export class ConfigPanelComponent implements OnInit, OnDestroy {
     this._configs.forEach(
       (cfg) => (this._descriptionStateDict[cfg.id] = false)
     );
-    this.cdr.detectChanges();
   }
   get configs(): Config[] {
     return this._configs;
@@ -49,7 +39,6 @@ export class ConfigPanelComponent implements OnInit, OnDestroy {
   @ContentChild(ConfigPanelTableTemplateDirective)
   configPanelTableDirective: ConfigPanelTableTemplateDirective | null = null;
 
-  _subscription: Subscription = new Subscription();
   _configs: Config[] = [];
 
   get configPanelTableId(): string | null {
@@ -62,11 +51,7 @@ export class ConfigPanelComponent implements OnInit, OnDestroy {
 
   _descriptionStateDict: Dictionary<boolean> = {};
 
-  constructor(private cdr: ChangeDetectorRef) {}
-
-  ngOnDestroy(): void {
-    this._subscription.unsubscribe();
-  }
+  constructor() {}
 
   ngOnInit() {}
 
@@ -80,6 +65,7 @@ export class ConfigPanelComponent implements OnInit, OnDestroy {
   }
 
   showDescription(configId: string): boolean {
-    return this._descriptionStateDict[configId];
+    return false;
+    //return this._descriptionStateDict[configId];
   }
 }
