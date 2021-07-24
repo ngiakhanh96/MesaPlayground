@@ -1,7 +1,6 @@
 import { KeyValue } from '@angular/common';
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnInit,

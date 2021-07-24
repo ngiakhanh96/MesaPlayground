@@ -26,4 +26,32 @@
 
 .button {
   margin-bottom: 10px;
+  display: flex;
+}
+
+button {
+  border: none;
+  color: white;
+  padding: 8px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  background-color: #008cba;
+  border-radius: 5px;
+}
+
+.info {
+  display: flex;
+  text-decoration: none;
+  color: black;
+  align-items: center;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.description {
+  border: 1px solid black;
 }

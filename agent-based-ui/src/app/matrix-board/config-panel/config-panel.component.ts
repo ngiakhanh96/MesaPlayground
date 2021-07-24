@@ -1,13 +1,14 @@
 import {
   AfterViewInit,
-  ChangeDetectionStrategy,
   ChangeDetectorRef,
   ContentChild,
   Directive,
   Input,
+  OnDestroy,
   TemplateRef,
 } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { NotificationService } from 'src/app/services/notification.service';
 
 export interface Config {
@@ -16,6 +17,7 @@ export interface Config {
   description: string;
   buttonText?: string;
   buttonFn: () => void;
+  showDescription?: boolean;
 }
 
 @Directive({ selector: '[appConfigPanelTableTmp]' })
@@ -29,12 +31,24 @@ export class ConfigPanelTableTemplateDirective {
   templateUrl: './config-panel.component.html',
   styleUrls: ['./config-panel.component.scss'],
 })
-export class ConfigPanelComponent implements OnInit, AfterViewInit {
-  @Input() configs: Config[] = [];
-  @Input() set triggerChangeDetector(v: boolean) {}
-  _triggerChangeDetector: boolean = false;
+export class ConfigPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input() set configs(v: Config[]) {
+    this._configs = v;
+    this._descriptionStateDict = {};
+    this._configs.forEach(
+      (cfg) => (this._descriptionStateDict[cfg.id] = false)
+    );
+    this.cdr.detectChanges();
+  }
+  get configs(): Config[] {
+    return this._configs;
+  }
+
   @ContentChild(ConfigPanelTableTemplateDirective)
   configPanelTableDirective: ConfigPanelTableTemplateDirective | null = null;
+
+  _subscription: Subscription = new Subscription();
+  _configs: Config[] = [];
 
   get configPanelTableId(): string | null {
     return this.configPanelTableDirective?.id ?? null;
@@ -44,17 +58,23 @@ export class ConfigPanelComponent implements OnInit, AfterViewInit {
     return this.configPanelTableDirective?.template ?? null;
   }
 
+  _descriptionStateDict: Dictionary<boolean> = {};
+
   constructor(
     private cdr: ChangeDetectorRef,
     private notificationService: NotificationService
   ) {}
+
+  ngOnDestroy(): void {
+    this._subscription.unsubscribe();
+  }
 
   ngAfterViewInit(): void {
     this.cdr.detach();
   }
 
   ngOnInit() {
-    this.notificationService
+    this._subscription = this.notificationService
       .getNotification()
       .subscribe((x) => this.cdr.detectChanges());
   }
@@ -62,5 +82,19 @@ export class ConfigPanelComponent implements OnInit, AfterViewInit {
   onClick(config: Config) {
     config.buttonFn();
     this.cdr.detectChanges();
+  }
+
+  toggleDescription(configId: string) {
+    this._descriptionStateDict[configId] =
+      !this._descriptionStateDict[configId];
+    this.cdr.detectChanges();
+  }
+
+  showDescription(configId: string): boolean {
+    return this._descriptionStateDict[configId];
+  }
+
+  onClickTest() {
+    console.log('Test');
   }
 }
