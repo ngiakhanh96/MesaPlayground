@@ -10,7 +10,6 @@ import {
 } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { NotificationService } from 'src/app/services/notification.service';
 
 export interface Config {
   id: string;
@@ -31,7 +30,7 @@ export class ConfigPanelTableTemplateDirective {
   templateUrl: './config-panel.component.html',
   styleUrls: ['./config-panel.component.scss'],
 })
-export class ConfigPanelComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ConfigPanelComponent implements OnInit, OnDestroy {
   @Input() set configs(v: Config[]) {
     if (Utils.isEqual(v, this._configs)) {
       return;
@@ -63,41 +62,24 @@ export class ConfigPanelComponent implements OnInit, AfterViewInit, OnDestroy {
 
   _descriptionStateDict: Dictionary<boolean> = {};
 
-  constructor(
-    private cdr: ChangeDetectorRef,
-    private notificationService: NotificationService
-  ) {}
+  constructor(private cdr: ChangeDetectorRef) {}
 
   ngOnDestroy(): void {
     this._subscription.unsubscribe();
   }
 
-  ngAfterViewInit(): void {
-    this.cdr.detach();
-  }
-
-  ngOnInit() {
-    this._subscription = this.notificationService
-      .getNotification()
-      .subscribe((x) => this.cdr.detectChanges());
-  }
+  ngOnInit() {}
 
   onClick(config: Config) {
     config.buttonFn();
-    this.cdr.detectChanges();
   }
 
   toggleDescription(configId: string) {
     this._descriptionStateDict[configId] =
       !this._descriptionStateDict[configId];
-    this.cdr.detectChanges();
   }
 
   showDescription(configId: string): boolean {
     return this._descriptionStateDict[configId];
-  }
-
-  onClickTest() {
-    console.log('Test');
   }
 }

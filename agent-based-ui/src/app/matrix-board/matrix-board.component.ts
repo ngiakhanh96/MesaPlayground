@@ -15,7 +15,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { AgentType } from '../enums/AgentType.enum';
-import { NotificationService } from '../services/notification.service';
 import { Utils } from '../utils/utils';
 import { Config } from './config-panel/config-panel.component';
 
@@ -68,10 +67,7 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     processingTimes: this.fb.group({}),
   });
 
-  constructor(
-    private fb: FormBuilder,
-    private notificationService: NotificationService
-  ) {}
+  constructor(private fb: FormBuilder) {}
 
   ngAfterViewInit() {
     this.onResizeCanvas();
@@ -378,7 +374,6 @@ export class MatrixBoardComponent implements OnInit, AfterViewInit {
     const spotCellFormGroup = this.fb.group(spotCellFormControlDict);
     //spotCellFormGroup.patchValue(oldValues);
     this.form.setControl('processingTimes', spotCellFormGroup);
-    this.notificationService.notify(true);
   }
 
   isSelectedCell(topLeftCoordinate: Position) {

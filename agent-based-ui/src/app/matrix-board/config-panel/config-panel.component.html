@@ -1,33 +1,26 @@
 <div class="container">
-  <button mat-flat-button type="button" (click)="onClickTest()">
-    Nut o ngoai
-  </button>
-  <button
-    mat-raised-button
-    matTooltip="Info about the action"
-    aria-label="Button that displays a tooltip when focused or hovered over"
-  >
-    Action
-  </button>
   <div class="small-panel" *ngFor="let config of configs">
     <div class="title">
       {{ config.textTitle }}
     </div>
-    <div *ngIf="showDescription(config.id)" class="description">
+    <div *ngIf="false" class="description">
       {{ config.description }}
     </div>
     <div class="button">
-      <button mat-button type="button" (click)="onClick(config)">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="onClick(config)"
+      >
         {{ config.buttonText || "Choose" }}
       </button>
-      <button
-        mat-raised-button
-        matTooltip="Info about the action"
-        aria-label="Button that displays a tooltip when focused or hovered over"
+      <a
+        [matTooltip]="config.description"
+        matTooltipPosition="right"
+        class="info"
+        (click)="toggleDescription(config.id)"
       >
-        Action
-      </button>
-      <a class="info" (click)="toggleDescription(config.id)">
         <mat-icon aria-hidden="false"> info </mat-icon>
       </a>
     </div>

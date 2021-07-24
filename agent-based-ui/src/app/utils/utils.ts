@@ -23,6 +23,6 @@ export class Utils {
   }
 
   static isEqual(x: unknown, y: unknown): boolean {
-    return JSON.stringify(x) == JSON.stringify(y);
+    return JSON.stringify(x) === JSON.stringify(y);
   }
 }
